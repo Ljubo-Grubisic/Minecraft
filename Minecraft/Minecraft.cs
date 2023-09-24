@@ -39,7 +39,6 @@ namespace Minecraft
         }
         protected override void OnLoadModels()
         {
-            Block.InitBlocks(Shader);
             DirtBlock = new Block(new Vector3i(0, 0, 0), DirtTexture);
 
             Chunk = new Chunk(new Vector2i(), Chunk.GenerateChunk(DirtBlock));
@@ -48,6 +47,7 @@ namespace Minecraft
         
         protected override void OnUpdate(FrameEventArgs args)
         {
+            Console.WriteLine(Math.Round(1 / args.Time));
         }
         protected override void OnRender(FrameEventArgs args, Matrix4 view, Matrix4 projection)
         {
@@ -55,16 +55,16 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            GL.BindVertexArray(Block.Vao);
+            GL.BindVertexArray(Chunk.Mesh.VAO);
 
-            foreach (Block block in Chunk.Blocks)
-            {
-                Shader.SetMatrix("model", Matrix4.CreateTranslation(block.Position));
+            Shader.SetMatrix("model", Matrix4.CreateTranslation(new()));
 
-                GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
-            }
+            GL.BindTexture(TextureTarget.Texture2D, DirtTexture.Handle);
+
+            GL.DrawArrays(PrimitiveType.Triangles, 0, Chunk.Mesh.Vertices.Count);
 
             GL.BindVertexArray(0);
+
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)

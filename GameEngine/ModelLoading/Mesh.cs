@@ -5,22 +5,24 @@ using System.Runtime.InteropServices;
 
 namespace GameEngine.ModelLoading
 {
-    internal struct Vertex
+    public struct Vertex
     {
-        internal Vector3 Position;
-        internal Vector3 Normal;
-        internal Vector2 TexCoords;
+        public Vector3 Position;
+        public Vector3 Normal;
+        public Vector2 TexCoords;
     }
 
-    internal class Mesh
+    public class Mesh
     {
-        internal List<Vertex> Vertices;
-        internal List<int> Indices;
-        internal List<Texture> Textures;
+        public List<Vertex> Vertices;
+        public List<int> Indices;
+        public List<Texture> Textures;
 
-        private int VAO, VBO, EBO;
-        
-        internal Mesh(List<Vertex> vertices, List<int> indices, List<Texture> textures)
+        public int VAO {  get; set; }
+        public int VBO { get; set; }
+        public int EBO { get; set; }
+
+        public Mesh(List<Vertex> vertices, List<int> indices, List<Texture> textures)
         {
             this.Vertices = vertices;
             this.Indices = indices;
@@ -29,7 +31,7 @@ namespace GameEngine.ModelLoading
             SetupMesh();
         }
 
-        internal void Draw(Shader shader)
+        public void Draw(Shader shader)
         {
             int diffuseNumber = 1, specularNumber = 1;
 
