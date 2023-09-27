@@ -23,6 +23,7 @@ namespace GameEngine.MainLooping
             GL.Enable(EnableCap.DepthTest);
             this.CursorState = CursorState.Grabbed;
 
+            OnInit();
             this.Camera = OnCreateCamera();
             OnLoadShaders();
             OnLoadTextures();

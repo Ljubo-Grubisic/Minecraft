@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\Textures\" />
     <Folder Include="Shaders\" />
   </ItemGroup>
 
@@ -22,7 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Textures\dirt.png">
+    <None Update="Resources\Textures\Textures.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Textures\TexturesNum.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Shaders\fragment_shader.glsl">

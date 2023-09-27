@@ -14,14 +14,18 @@ namespace Minecraft
     {
         internal Shader Shader { get; set; }
 
-        internal Texture DirtTexture {  get; set; }
-        internal Block DirtBlock { get; set; }
-
         internal Chunk Chunk { get; set; }
+
+        internal Block Block { get; set; }
 
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
             
+        }
+
+        protected override void OnInit()
+        {
+            Block.Init();
         }
 
         protected override Camera OnCreateCamera()
@@ -35,13 +39,12 @@ namespace Minecraft
         }
         protected override void OnLoadTextures()
         {
-            DirtTexture = Texture.LoadFromFile("Resources/Textures/dirt.png");
         }
         protected override void OnLoadModels()
         {
-            DirtBlock = new Block(new Vector3i(0, 0, 0), DirtTexture);
-
-            Chunk = new Chunk(new Vector2i(), Chunk.GenerateChunk(DirtBlock));
+            //Chunk = new Chunk(new Vector2i(), Chunk.GenerateChunk());
+            Block.Init();
+            Block = new Block(new(), BlockType.Stone);
         }
 
         
@@ -55,16 +58,23 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            GL.BindVertexArray(Chunk.Mesh.VAO);
+            //GL.BindVertexArray(Chunk.Mesh.VAO);  
+            //
+            //Shader.SetMatrix("model", Matrix4.CreateTranslation(new()));
+            //
+            //GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+            //
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, Chunk.Mesh.Vertices.Count);
+            //
+            //GL.BindVertexArray(0);
 
-            Shader.SetMatrix("model", Matrix4.CreateTranslation(new()));
-
-            GL.BindTexture(TextureTarget.Texture2D, DirtTexture.Handle);
-
-            GL.DrawArrays(PrimitiveType.Triangles, 0, Chunk.Mesh.Vertices.Count);
-
+            GL.BindVertexArray(Block.Vao);
+            
+            Shader.SetMatrix("model", Matrix4.CreateTranslation(Block.Position));
+        
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            
             GL.BindVertexArray(0);
-
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)

@@ -25,7 +25,6 @@ namespace Minecraft.WorldBuilding
         internal Mesh Bake()
         {
             List<Vertex> vertices = new List<Vertex>();
-            List<Texture> textures = new List<Texture>();
             Vertex vertexBuffer = new Vertex();
 
             foreach (Block block in Blocks)
@@ -75,7 +74,7 @@ namespace Minecraft.WorldBuilding
                         vertices.Add(vertexBuffer);
                     }
                 }
-                if (!IsBlockSideCovered(block, new Vector3i(0, 1, -1)))
+                if (!IsBlockSideCovered(block, new Vector3i(0, 1, 0)))
                 {
                     for (int i = 0; i < 6; i++)
                     {
@@ -86,40 +85,37 @@ namespace Minecraft.WorldBuilding
                 }
             }
 
-            return new Mesh(vertices, new(), textures);
+            return new Mesh(vertices, new(), new());
         }
 
         internal bool IsBlockSideCovered(Block block, Vector3i offset)
         {
-            if (block != null)
+            Vector3i position = block.Position + offset + (Size / 2);
+            if (!IsOutOfRange(position, Size))
             {
-                Vector3i position = block.Position + offset + (Size / 2);
-                if (!IsOutOfRange(position, Size))
+                if (Blocks[position.X, position.Y, position.Z] != null)
                 {
-                    if (Blocks[position.X, position.Y, position.Z] != null)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                return false;
             }
-            return true;
+            return false;
         }
 
-        internal static Block[,,] GenerateChunk(Block block)
+        internal static Block[,,] GenerateChunk()
         {
             Block[,,] blocks = new Block[Size.X, Size.Y, Size.Z];
-            Block bufferBlock = new Block(new Vector3i(), block.Texture);
+            Block bufferBlock = new Block();
 
             for (int x = 0; x < Size.X; x++)
             {
-                for (int y = 0; y < Size.Y; y++)
+                for (int z = 0; z < Size.Z; z++)
                 {
-                    for (int z = 0; z < Size.Z; z++)
+                    for (int y = 0; y < Size.Y; y++)
                     {
                         bufferBlock.Position.X = x - (Size.X / 2);
                         bufferBlock.Position.Y = y - (Size.Y / 2);
                         bufferBlock.Position.Z = z - (Size.Z / 2);
+                        bufferBlock.Type = BlockType.Dirt;
                         blocks[x, y, z] = (Block)bufferBlock.Clone();
                     }
                 }

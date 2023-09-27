@@ -12,6 +12,7 @@ namespace GameEngine.MainLooping
 {
     public abstract partial class Game
     {
+        protected abstract void OnInit();
         protected abstract Camera OnCreateCamera();
         protected abstract void OnLoadShaders();
         protected abstract void OnLoadTextures();
