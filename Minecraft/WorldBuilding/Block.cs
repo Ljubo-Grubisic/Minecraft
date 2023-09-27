@@ -25,15 +25,12 @@ namespace Minecraft.WorldBuilding
             set
             {
                 type = value;
-                CalculateTexCoordsByIndex();
+                GetTexCoordsByIndex();
             }
         }
 
         internal static readonly int NumTexturesRow = 3;
         internal static readonly int NumTexturesColumn = 1;
-
-        internal static int Vbo { get; private set; }
-        internal static int Vao { get; private set; }
 
         internal static Texture Texture { get; private set; }
         internal static List<Vertex> Vertices = new List<Vertex>()
@@ -100,18 +97,41 @@ namespace Minecraft.WorldBuilding
 
         internal Block() { }
 
-        internal Vector2 CalculateTexCoordsByIndex()
+        public object Clone()
+        {
+            return new Block(this.Position, this.Type);
+        }
+
+        internal Vector2 GetTexCoordsByIndex()
         {
             Vector2 texCoords = new();
             for (int i = 0; i < Vertices.Count; i++)
             {
-                texCoords.X = Vertices[i].TexCoords.X + ((float) PositionOfBlockType(Type).Y / NumTexturesRow);
-                texCoords.Y = Vertices[i].TexCoords.Y + ((NumTexturesColumn - 1.0f) / NumTexturesColumn);
-                Vertices[i] = new Vertex { Position = Vertices[i].Position, Normal = Vertices[i].Normal, TexCoords = texCoords };
+                texCoords.X = ((float)PositionOfBlockType(Type).Y / NumTexturesRow);
             }
-            BufferSetup();
-
             return texCoords;
+        }
+
+        internal unsafe static void Init()
+        {
+            Texture = Texture.LoadFromFile("Resources/Textures/Textures.png");
+            CalculateTexCoords();
+
+            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));
+            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Grass, new Vector2i(0, 1)));
+            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Stone, new Vector2i(0, 2)));
+        }
+
+        internal static Vector2i PositionOfBlockType(BlockType blockType)
+        {
+            foreach (Tuple<BlockType, Vector2i> tuple in TextureIndex)
+            {
+                if (tuple.Item1 == blockType)
+                {
+                    return tuple.Item2;
+                }
+            }
+            return Vector2i.Zero;
         }
 
         private static void CalculateTexCoords()
@@ -261,57 +281,6 @@ namespace Minecraft.WorldBuilding
                 indicies = 31;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
             }
-        }
-
-        internal unsafe static void BufferSetup()
-        {
-            Vao = GL.GenVertexArray();
-            Vbo = GL.GenBuffer();
-
-            GL.BindVertexArray(Vao);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, Vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Count * sizeof(Vertex), Vertices.ToArray(), BufferUsageHint.StaticDraw);
-
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.Position)));
-
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.Normal)));
-
-            GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoords)));
-
-            GL.BindVertexArray(0);
-        }
-
-        internal unsafe static void Init()
-        {
-            Texture = Texture.LoadFromFile("Resources/Textures/TexturesNum.png");
-            CalculateTexCoords();
-
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Grass, new Vector2i(0, 1)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Stone, new Vector2i(0, 2)));
-
-            BufferSetup();
-        }
-
-        internal static Vector2i PositionOfBlockType(BlockType blockType)
-        {
-            foreach (Tuple<BlockType, Vector2i> tuple in TextureIndex)
-            {
-                if (tuple.Item1 == blockType)
-                {
-                    return tuple.Item2;
-                }
-            }
-            return Vector2i.Zero;
-        }
-
-        public object Clone()
-        {
-            return new Block(this.Position, this.Type);
         }
     }
 

@@ -30,7 +30,7 @@ namespace Minecraft
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 0, 4), (float)this.Size.X / (float)this.Size.Y, 45) { Speed = 5 };
+            return new Camera(new Vector3(0, 64, 4), (float)this.Size.X / (float)this.Size.Y, 45) { Speed = 5 };
         }
 
         protected override void OnLoadShaders()
@@ -42,15 +42,14 @@ namespace Minecraft
         }
         protected override void OnLoadModels()
         {
-            //Chunk = new Chunk(new Vector2i(), Chunk.GenerateChunk());
-            Block.Init();
-            Block = new Block(new(), BlockType.Stone);
+            Chunk = new Chunk(new Vector2i(), Chunk.GenerateChunk());
         }
 
         
         protected override void OnUpdate(FrameEventArgs args)
         {
-            Console.WriteLine(Math.Round(1 / args.Time));
+            //Console.WriteLine(Math.Round(1 / args.Time));
+            Console.WriteLine(Camera.Position);
         }
         protected override void OnRender(FrameEventArgs args, Matrix4 view, Matrix4 projection)
         {
@@ -58,21 +57,13 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            //GL.BindVertexArray(Chunk.Mesh.VAO);  
-            //
-            //Shader.SetMatrix("model", Matrix4.CreateTranslation(new()));
-            //
-            //GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
-            //
-            //GL.DrawArrays(PrimitiveType.Triangles, 0, Chunk.Mesh.Vertices.Count);
-            //
-            //GL.BindVertexArray(0);
-
-            GL.BindVertexArray(Block.Vao);
+            GL.BindVertexArray(Chunk.Mesh.VAO);  
             
-            Shader.SetMatrix("model", Matrix4.CreateTranslation(Block.Position));
-        
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            Shader.SetMatrix("model", Matrix4.CreateTranslation(new()));
+
+            GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+            
+            GL.DrawArrays(PrimitiveType.Triangles, 0, Chunk.Mesh.Vertices.Count);
             
             GL.BindVertexArray(0);
         }
