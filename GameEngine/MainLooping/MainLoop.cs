@@ -22,6 +22,7 @@ namespace GameEngine.MainLooping
 
             GL.Enable(EnableCap.DepthTest);
             this.CursorState = CursorState.Grabbed;
+            KeyboardManager.Init(this);
 
             OnInit();
             this.Camera = OnCreateCamera();
@@ -37,6 +38,8 @@ namespace GameEngine.MainLooping
             Camera.UpdateKeys(MouseState, KeyboardState, (float)args.Time);
 
             OnUpdate(args);
+
+            KeyboardManager.Update();
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)

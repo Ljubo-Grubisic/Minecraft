@@ -7,6 +7,8 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using GameEngine;
 
 namespace Minecraft
 {
@@ -16,7 +18,7 @@ namespace Minecraft
 
         internal Chunk Chunk { get; set; }
 
-        internal Block Block { get; set; }
+        private bool WireFrameMode = false;
 
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
@@ -26,11 +28,12 @@ namespace Minecraft
         protected override void OnInit()
         {
             Block.Init();
+            ChunkManager.Init();
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 64, 4), (float)this.Size.X / (float)this.Size.Y, 45) { Speed = 5 };
+            return new Camera(new Vector3(0, 50, 4), (float)this.Size.X / (float)this.Size.Y, 45) { Speed = 5 };
         }
 
         protected override void OnLoadShaders()
@@ -42,14 +45,28 @@ namespace Minecraft
         }
         protected override void OnLoadModels()
         {
-            Chunk = new Chunk(new Vector2i(), Chunk.GenerateChunk());
         }
 
         
         protected override void OnUpdate(FrameEventArgs args)
         {
-            //Console.WriteLine(Math.Round(1 / args.Time));
-            Console.WriteLine(Camera.Position);
+            Console.WriteLine(Math.Round(1 / args.Time));
+            //Console.WriteLine(Camera.Position);
+
+            if (KeyboardManager.OnKeyPressed(Keys.P))
+            {
+                if (WireFrameMode)
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                    WireFrameMode = false;
+                }
+                else
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                    WireFrameMode = true;
+                }
+            }
+
         }
         protected override void OnRender(FrameEventArgs args, Matrix4 view, Matrix4 projection)
         {
@@ -57,15 +74,18 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            GL.BindVertexArray(Chunk.Mesh.VAO);  
-            
-            Shader.SetMatrix("model", Matrix4.CreateTranslation(new()));
+            foreach (Chunk chunk in ChunkManager.Chunks)
+            {
+                GL.BindVertexArray(chunk.Mesh.VAO);
 
-            GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
-            
-            GL.DrawArrays(PrimitiveType.Triangles, 0, Chunk.Mesh.Vertices.Count);
-            
-            GL.BindVertexArray(0);
+                Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
+
+                GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+
+                GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
+
+                GL.BindVertexArray(0);
+            }
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)

@@ -11,7 +11,7 @@ namespace Minecraft.WorldBuilding
     {
         internal Vector2i Position { get; private set; }
 
-        internal static readonly Vector3i Size = new Vector3i(16, 256, 16);
+        internal static readonly Vector3i Size = new Vector3i(16, 128, 16);
         internal Block[,,] Blocks = new Block[Size.X, Size.Y, Size.Z];
 
         internal Mesh Mesh { get; private set; }
@@ -38,7 +38,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsByIndex();
+                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -48,7 +48,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 6];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsByIndex();
+                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -58,7 +58,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 12];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsByIndex();
+                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -68,7 +68,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i+ 18];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsByIndex();
+                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -78,7 +78,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 24];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsByIndex();
+                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -88,7 +88,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 30];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsByIndex();
+                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -116,7 +116,7 @@ namespace Minecraft.WorldBuilding
             Block[,,] blocks = new Block[Size.X, Size.Y, Size.Z];
             Block bufferBlock = new Block();
 
-            int height = 64 + (Size.Y / 2);
+            int height = 32 + (Size.Y / 2);
 
             for (int x = 0; x < Size.X; x++)
             {

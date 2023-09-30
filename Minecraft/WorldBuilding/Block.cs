@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Minecraft.WorldBuilding
 {
-    internal enum BlockType
+    internal enum BlockType : byte
     {
         Air,
         Dirt,
@@ -17,17 +17,7 @@ namespace Minecraft.WorldBuilding
     internal class Block : ICloneable
     {
         internal Vector3i Position;
-        private BlockType type;
-
-        internal BlockType Type
-        {
-            get => type;
-            set
-            {
-                type = value;
-                GetTexCoordsByIndex();
-            }
-        }
+        internal BlockType Type;
 
         internal static readonly int NumTexturesRow = 3;
         internal static readonly int NumTexturesColumn = 1;
@@ -84,45 +74,44 @@ namespace Minecraft.WorldBuilding
             new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(0.0f,  1.0f,  0.0f), TexCoords = new Vector2(0.0f, 1.0f) }
         };
 
-        /// <summary>
-        /// Position is in row, column. Where the top left is 0, 0 and the bottom right is numTexturesColumn, numTexturesRow 
-        /// </summary>
-        private static List<Tuple<BlockType, Vector2i>> TextureIndex = new();
+        private static List<Tuple<BlockType, Vector2i>> TextureIndex = new List<Tuple<BlockType, Vector2i>>();
+
+        internal Block() { }
 
         internal Block(Vector3i position, BlockType type)
         {
             this.Position = position;
             this.Type = type;
         }
-
-        internal Block() { }
-
+        
         public object Clone()
         {
             return new Block(this.Position, this.Type);
         }
 
-        internal Vector2 GetTexCoordsByIndex()
+        internal  Vector2 GetTexCoordsOffset()
         {
-            Vector2 texCoords = new();
-            for (int i = 0; i < Vertices.Count; i++)
+            Vector2 texCoords = new Vector2()
             {
-                texCoords.X = ((float)PositionOfBlockType(Type).Y / NumTexturesRow);
-            }
+                X = (float)TexCoordsOfBlockType(Type).Y / NumTexturesRow,
+                Y = (float)TexCoordsOfBlockType(Type).X + ((NumTexturesColumn - 1.0f) / NumTexturesColumn)
+            };
+
             return texCoords;
         }
 
-        internal unsafe static void Init()
+        internal static Vector2 GetTexCoordsOffset(BlockType type)
         {
-            Texture = Texture.LoadFromFile("Resources/Textures/Textures.png");
-            CalculateTexCoords();
+            Vector2 texCoords = new Vector2()
+            {
+                X = (float)TexCoordsOfBlockType(type).Y / NumTexturesRow,
+                Y = (float)TexCoordsOfBlockType(type).X + ((NumTexturesColumn - 1.0f) / NumTexturesColumn)
+            };
 
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Grass, new Vector2i(0, 1)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Stone, new Vector2i(0, 2)));
+            return texCoords;
         }
 
-        internal static Vector2i PositionOfBlockType(BlockType blockType)
+        internal static Vector2i TexCoordsOfBlockType(BlockType blockType)
         {
             foreach (Tuple<BlockType, Vector2i> tuple in TextureIndex)
             {
@@ -132,6 +121,16 @@ namespace Minecraft.WorldBuilding
                 }
             }
             return Vector2i.Zero;
+        }
+
+        internal static void Init()
+        {
+            Texture = Texture.LoadFromFile("Resources/Textures/Textures.png");
+            CalculateTexCoords();
+
+            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));
+            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Grass, new Vector2i(0, 1)));
+            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Stone, new Vector2i(0, 2)));
         }
 
         private static void CalculateTexCoords()
@@ -283,5 +282,4 @@ namespace Minecraft.WorldBuilding
             }
         }
     }
-
 }
