@@ -16,14 +16,13 @@ namespace Minecraft.WorldBuilding
 
         internal Mesh Mesh { get; private set; }
 
-        internal unsafe Chunk(Vector2i position, Block[,,] blocks)
+        internal Chunk(Vector2i position, Block[,,] blocks)
         {
             this.Position = position;
             this.Blocks = blocks;
-            this.Mesh = Bake();
         }
 
-        internal Mesh Bake()
+        internal void Bake(List<Chunk> neighborChunks)
         {
             List<Vertex> vertices = new List<Vertex>();
             Vertex vertexBuffer = new Vertex();
@@ -32,7 +31,7 @@ namespace Minecraft.WorldBuilding
             {
                 if (block.Type != BlockType.Air)
                 {
-                    if (!IsBlockSideCovered(block, new Vector3i(0, 0, -1)))
+                    if (!IsBlockSideCovered(block, new Vector3i(0, 0, -1), neighborChunks))
                     {
                         for (int i = 0; i < 6; i++)
                         {
@@ -42,7 +41,7 @@ namespace Minecraft.WorldBuilding
                             vertices.Add(vertexBuffer);
                         }
                     }
-                    if (!IsBlockSideCovered(block, new Vector3i(0, 0, 1)))
+                    if (!IsBlockSideCovered(block, new Vector3i(0, 0, 1), neighborChunks))
                     {
                         for (int i = 0; i < 6; i++)
                         {
@@ -52,7 +51,7 @@ namespace Minecraft.WorldBuilding
                             vertices.Add(vertexBuffer);
                         }
                     }
-                    if (!IsBlockSideCovered(block, new Vector3i(-1, 0, 0)))
+                    if (!IsBlockSideCovered(block, new Vector3i(-1, 0, 0), neighborChunks))
                     {
                         for (int i = 0; i < 6; i++)
                         {
@@ -62,7 +61,7 @@ namespace Minecraft.WorldBuilding
                             vertices.Add(vertexBuffer);
                         }
                     }
-                    if (!IsBlockSideCovered(block, new Vector3i(1, 0, 0)))
+                    if (!IsBlockSideCovered(block, new Vector3i(1, 0, 0), neighborChunks))
                     {
                         for (int i = 0; i < 6; i++)
                         {
@@ -72,7 +71,7 @@ namespace Minecraft.WorldBuilding
                             vertices.Add(vertexBuffer);
                         }
                     }
-                    if (!IsBlockSideCovered(block, new Vector3i(0, -1, 0)))
+                    if (!IsBlockSideCovered(block, new Vector3i(0, -1, 0), neighborChunks))
                     {
                         for (int i = 0; i < 6; i++)
                         {
@@ -82,7 +81,7 @@ namespace Minecraft.WorldBuilding
                             vertices.Add(vertexBuffer);
                         }
                     }
-                    if (!IsBlockSideCovered(block, new Vector3i(0, 1, 0)))
+                    if (!IsBlockSideCovered(block, new Vector3i(0, 1, 0), neighborChunks))
                     {
                         for (int i = 0; i < 6; i++)
                         {
@@ -95,10 +94,10 @@ namespace Minecraft.WorldBuilding
                 }
             }
 
-            return new Mesh(vertices, new(), new());
+            this.Mesh = new Mesh(vertices, new(), new());
         }
 
-        internal bool IsBlockSideCovered(Block block, Vector3i offset)
+        internal bool IsBlockSideCovered(Block block, Vector3i offset, List<Chunk> neighborChunks)
         {
             Vector3i position = block.Position + offset + (Size / 2);
             if (!IsOutOfRange(position, Size))
@@ -108,6 +107,53 @@ namespace Minecraft.WorldBuilding
                     return true;
                 }
             }
+            //else
+            //{
+            //    if (offset.X == 1)
+            //    {
+            //        int index = IndexOfChunk(new Vector2i(1, 0) + this.Position, neighborChunks);
+            //        if (index != -1)
+            //        {
+            //            if (neighborChunks[index].Blocks[Chunk.Size.X - 1, position.Y, position.Z].Type != BlockType.Air)
+            //            {
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //    else if (offset.X == -1)
+            //    {
+            //        int index = IndexOfChunk(new Vector2i(-1, 0) + this.Position, neighborChunks);
+            //        if (index != -1)
+            //        {
+            //            if (neighborChunks[index].Blocks[0, position.Y, position.Z].Type != BlockType.Air)
+            //            {
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //    else if (offset.Z == 1)
+            //    {
+            //        int index = IndexOfChunk(new Vector2i(0, 1) + this.Position, neighborChunks);
+            //        if (index != -1)
+            //        {
+            //            if (neighborChunks[index].Blocks[position.X, position.Y, Chunk.Size.Z - 1].Type != BlockType.Air)
+            //            {
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //    else if (offset.Z == -1)
+            //    {
+            //        int index = IndexOfChunk(new Vector2i(0, -1) + this.Position, neighborChunks);
+            //        if (index != -1)
+            //        {
+            //            if (neighborChunks[index].Blocks[position.X, position.Y, 0].Type != BlockType.Air)
+            //            {
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //}
             return false;
         }
 
@@ -148,7 +194,22 @@ namespace Minecraft.WorldBuilding
             return blocks;
         }
 
-        internal static bool IsOutOfRange(Vector3i position, Vector3i size)
+        internal static int IndexOfChunk(Vector2i position, List<Chunk> chunks)
+        {
+            for (int i = 0; i < chunks.Count; i++)
+            {
+                if (chunks[i] != null)
+                {
+                    if (chunks[i].Position == position)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        private static bool IsOutOfRange(Vector3i position, Vector3i size)
         {
             if (position.X < 0 || position.Y < 0 || position.Z < 0)
             {
@@ -163,5 +224,6 @@ namespace Minecraft.WorldBuilding
                 return false;
             }
         }
+
     }
 }

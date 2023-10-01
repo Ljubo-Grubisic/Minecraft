@@ -29,6 +29,7 @@ namespace Minecraft
         {
             Block.Init();
             ChunkManager.Init();
+            ChunkManager.BakeChunks();
         }
 
         protected override Camera OnCreateCamera()

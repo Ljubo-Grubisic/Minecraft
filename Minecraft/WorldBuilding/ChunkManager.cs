@@ -19,8 +19,38 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < SpawnChunkArea.Y; j++)
                 {
-                    Chunks.Add(new Chunk(new Vector2i(i - (SpawnChunkArea.X / 2), j - (SpawnChunkArea.X / 2)), Chunk.GenerateChunk()));
+                    Chunks.Add(new Chunk(new Vector2i(i - (SpawnChunkArea.X / 2), j - (SpawnChunkArea.Y / 2)), Chunk.GenerateChunk()));
                 }
+            }
+        }
+
+        internal static void BakeChunks() 
+        {
+            List<int> index = new List<int>();
+            List<Chunk> neighbors = new List<Chunk>();
+            for (int i = 0; i < Chunks.Count; i++)
+            {
+                index.Clear();
+                neighbors.Clear();
+
+                index.Add(Chunk.IndexOfChunk(new Vector2i(-1, 0) + Chunks[i].Position, Chunks));
+                index.Add(Chunk.IndexOfChunk(new Vector2i(1, 0) + Chunks[i].Position, Chunks));
+                index.Add(Chunk.IndexOfChunk(new Vector2i(0, -1) + Chunks[i].Position, Chunks));
+                index.Add(Chunk.IndexOfChunk(new Vector2i(0, 1) + Chunks[i].Position, Chunks));
+
+                for (int j = 0; j < index.Count; j++)
+                {
+                    if (index[j] == -1)
+                    {
+                        neighbors.Add(null);
+                    }
+                    else
+                    {
+                        neighbors.Add(Chunks[index[j]]);
+                    }
+                }
+
+                Chunks[i].Bake(neighbors);
             }
         }
     }
