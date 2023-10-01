@@ -107,53 +107,53 @@ namespace Minecraft.WorldBuilding
                     return true;
                 }
             }
-            //else
-            //{
-            //    if (offset.X == 1)
-            //    {
-            //        int index = IndexOfChunk(new Vector2i(1, 0) + this.Position, neighborChunks);
-            //        if (index != -1)
-            //        {
-            //            if (neighborChunks[index].Blocks[Chunk.Size.X - 1, position.Y, position.Z].Type != BlockType.Air)
-            //            {
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //    else if (offset.X == -1)
-            //    {
-            //        int index = IndexOfChunk(new Vector2i(-1, 0) + this.Position, neighborChunks);
-            //        if (index != -1)
-            //        {
-            //            if (neighborChunks[index].Blocks[0, position.Y, position.Z].Type != BlockType.Air)
-            //            {
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //    else if (offset.Z == 1)
-            //    {
-            //        int index = IndexOfChunk(new Vector2i(0, 1) + this.Position, neighborChunks);
-            //        if (index != -1)
-            //        {
-            //            if (neighborChunks[index].Blocks[position.X, position.Y, Chunk.Size.Z - 1].Type != BlockType.Air)
-            //            {
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //    else if (offset.Z == -1)
-            //    {
-            //        int index = IndexOfChunk(new Vector2i(0, -1) + this.Position, neighborChunks);
-            //        if (index != -1)
-            //        {
-            //            if (neighborChunks[index].Blocks[position.X, position.Y, 0].Type != BlockType.Air)
-            //            {
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //}
+            else
+            {
+                if (offset.X == 1)
+                {
+                    int index = IndexOfChunk(new Vector2i(1, 0) + this.Position, neighborChunks);
+                    if (index != -1)
+                    {
+                        if (neighborChunks[index].Blocks[Chunk.Size.X - 1, position.Y, position.Z].Type != BlockType.Air)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (offset.X == -1)
+                {
+                    int index = IndexOfChunk(new Vector2i(-1, 0) + this.Position, neighborChunks);
+                    if (index != -1)
+                    {
+                        if (neighborChunks[index].Blocks[0, position.Y, position.Z].Type != BlockType.Air)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (offset.Z == 1)
+                {
+                    int index = IndexOfChunk(new Vector2i(0, 1) + this.Position, neighborChunks);
+                    if (index != -1)
+                    {
+                        if (neighborChunks[index].Blocks[position.X, position.Y, Chunk.Size.Z - 1].Type != BlockType.Air)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (offset.Z == -1)
+                {
+                    int index = IndexOfChunk(new Vector2i(0, -1) + this.Position, neighborChunks);
+                    if (index != -1)
+                    {
+                        if (neighborChunks[index].Blocks[position.X, position.Y, 0].Type != BlockType.Air)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
             return false;
         }
 
