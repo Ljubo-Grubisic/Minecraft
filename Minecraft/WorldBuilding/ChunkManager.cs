@@ -1,42 +1,127 @@
 ﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using GameEngine.Rendering;
 
 namespace Minecraft.WorldBuilding
 {
+    internal static class Extensions
+    {
+        internal static bool Contains(this List<Chunk> values, Vector2i position)
+        {
+            foreach (Chunk value in values)
+            {
+                if (value != null)
+                {
+                    if (value.Position == position)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal static int IndexOf(this List<Chunk> values, Vector2i position)
+        {
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i] != null)
+                {
+                    if (values[i].Position == position)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+    }
+
     internal static class ChunkManager
     {
         internal static List<Chunk> Chunks = new List<Chunk>();
+        internal static Queue<Chunk> ChunksWaitingToLoad = new Queue<Chunk>();
 
-        private static Vector2i SpawnChunkArea = new Vector2i(16, 16);
+        internal static int SpawnChunkSize { get; set; } = 5;
 
-        internal static void Init()
+        internal static int TicksPerSecond { get; set; } = 20;
+        internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
+
+        private static Thread ChunkManagingThread;
+        private static Player Player;
+
+        internal static void Init(Player player)
         {
-            for (int i = 0; i < SpawnChunkArea.X; i++)
+            Player = player;
+            LoadSpawnChunks();
+            ChunkManagingThread = new Thread(Loop) { IsBackground = true, Name = "ChunkManagingThread", Priority = ThreadPriority.AboveNormal };
+            ChunkManagingThread.Start();
+        }
+
+        internal static void Update(Player player)
+        {
+            Player = player;
+        }
+
+        internal static void Loop()
+        {
+            float totalTimeBeforeUpdate = 0f;
+            float previousTimeElapsed = 0f;
+            float deltaTime = 0f;
+            float totalTimeElapsed = 0f;
+            int counter = 3;
+
+            while (ChunkManagingThread.IsAlive)
             {
-                for (int j = 0; j < SpawnChunkArea.Y; j++)
+                totalTimeElapsed = (float)GLFW.GetTime();
+                deltaTime = totalTimeElapsed - previousTimeElapsed;
+                previousTimeElapsed = totalTimeElapsed;
+
+                totalTimeBeforeUpdate += deltaTime;
+
+                if (totalTimeBeforeUpdate >= TimeUntilUpdate)
                 {
-                    Chunks.Add(new Chunk(new Vector2i(i - (SpawnChunkArea.X / 2), j - (SpawnChunkArea.Y / 2)), Chunk.GenerateChunk()));
+                    totalTimeBeforeUpdate = 0;
+
+                    if (counter == 3)
+                    {
+
+
+                        counter = 0;
+                    }
+
+                    counter++;
                 }
             }
+        }
+
+        internal static void LoadSpawnChunks()
+        {
+            for (int i = 0; i < SpawnChunkSize; i++)
+            {
+                for (int j = 0; j < SpawnChunkSize; j++)
+                {
+                    Chunks.Add(new Chunk(new Vector2i(i - (SpawnChunkSize / 2), j - (SpawnChunkSize / 2))));
+                }
+            }
+
+            BakeChunks();
         }
 
         internal static void BakeChunks() 
         {
             List<int> index = new List<int>();
-            List<Chunk> neighbors = new List<Chunk>();
+            List<Chunk?> neighbors = new List<Chunk?>();
             for (int i = 0; i < Chunks.Count; i++)
             {
                 index.Clear();
                 neighbors.Clear();
 
-                index.Add(Chunk.IndexOfChunk(new Vector2i(-1, 0) + Chunks[i].Position, Chunks));
-                index.Add(Chunk.IndexOfChunk(new Vector2i(1, 0) + Chunks[i].Position, Chunks));
-                index.Add(Chunk.IndexOfChunk(new Vector2i(0, -1) + Chunks[i].Position, Chunks));
-                index.Add(Chunk.IndexOfChunk(new Vector2i(0, 1) + Chunks[i].Position, Chunks));
+                index.Add(Chunks.IndexOf(new Vector2i(-1, 0) + Chunks[i].Position));
+                index.Add(Chunks.IndexOf(new Vector2i(1, 0) + Chunks[i].Position));
+                index.Add(Chunks.IndexOf(new Vector2i(0, -1) + Chunks[i].Position));
+                index.Add(Chunks.IndexOf(new Vector2i(0, 1) + Chunks[i].Position));
 
                 for (int j = 0; j < index.Count; j++)
                 {

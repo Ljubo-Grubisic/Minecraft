@@ -10,8 +10,6 @@ namespace GameEngine.MainLooping
 {
     public abstract partial class Game : GameWindow
     {
-        protected Camera Camera;
-
         protected Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
         }
@@ -57,6 +55,7 @@ namespace GameEngine.MainLooping
             base.OnResize(e);
             GL.Viewport(0, 0, Size.X, Size.Y);
             Camera.AspectRatio = Size.X / (float)Size.Y;
+            OnWindowResize(e);
         }
 
         private void Clear()

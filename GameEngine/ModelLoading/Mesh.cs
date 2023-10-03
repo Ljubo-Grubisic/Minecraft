@@ -12,13 +12,13 @@ namespace GameEngine.ModelLoading
         public Vector2 TexCoords;
     }
 
-    public class Mesh
+    public class Mesh : IDisposable
     {
         public List<Vertex> Vertices;
         public List<int> Indices;
         public List<Texture> Textures;
 
-        public int VAO {  get; set; }
+        public int VAO { get; set; }
         public int VBO { get; set; }
         public int EBO { get; set; }
 
@@ -88,6 +88,13 @@ namespace GameEngine.ModelLoading
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoords)));
 
             GL.BindVertexArray(0);
+        }
+
+        public void Dispose()
+        {
+            this.Vertices.Clear();
+            this.Indices.Clear();
+            this.Textures.Clear();
         }
     }
 }

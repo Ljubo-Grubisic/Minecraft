@@ -21,10 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Textures\Textures.png">
+    <None Update="Resources\Textures.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Textures\TexturesNum.png">
+    <None Update="Resources\TexturesNum.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Shaders\fragment_shader.glsl">

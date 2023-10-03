@@ -89,7 +89,7 @@ namespace Minecraft.WorldBuilding
             return new Block(this.Position, this.Type);
         }
 
-        internal  Vector2 GetTexCoordsOffset()
+        internal Vector2 GetTexCoordsOffset()
         {
             Vector2 texCoords = new Vector2()
             {
@@ -125,7 +125,7 @@ namespace Minecraft.WorldBuilding
 
         internal static void Init()
         {
-            Texture = Texture.LoadFromFile("Resources/Textures/Textures.png");
+            Texture = Texture.LoadFromFile("Resources/Textures.png");
             CalculateTexCoords();
 
             TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));

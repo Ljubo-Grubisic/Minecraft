@@ -1,22 +1,20 @@
-﻿using GameEngine.MainLooping;
-using GameEngine.ModelLoading;
+﻿using GameEngine;
+using GameEngine.MainLooping;
 using GameEngine.Rendering;
 using GameEngine.Shadering;
 using Minecraft.WorldBuilding;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using GameEngine;
 
 namespace Minecraft
 {
     public class Minecraft : Game
     {
         internal Shader Shader { get; set; }
-
-        internal Chunk Chunk { get; set; }
+        internal Player Player { get; set; }
 
         private bool WireFrameMode = false;
 
@@ -28,13 +26,14 @@ namespace Minecraft
         protected override void OnInit()
         {
             Block.Init();
-            ChunkManager.Init();
+            Player = new Player(Camera, PlayerMovementType.FreeCam);
+            ChunkManager.Init(Player);
             ChunkManager.BakeChunks();
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50, 4), (float)this.Size.X / (float)this.Size.Y, 45) { Speed = 5 };
+            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f };
         }
 
         protected override void OnLoadShaders()
@@ -48,11 +47,13 @@ namespace Minecraft
         {
         }
 
-        
         protected override void OnUpdate(FrameEventArgs args)
         {
             Console.WriteLine(Math.Round(1 / args.Time));
             //Console.WriteLine(Camera.Position);
+
+            Player.Update(Camera);
+            ChunkManager.Update(Player);
 
             if (KeyboardManager.OnKeyPressed(Keys.P))
             {
@@ -91,6 +92,7 @@ namespace Minecraft
 
         protected override void OnWindowResize(ResizeEventArgs args)
         {
+            Console.WriteLine("Resized");
         }
     }
 }

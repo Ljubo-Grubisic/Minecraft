@@ -16,10 +16,49 @@ namespace Minecraft.WorldBuilding
 
         internal Mesh Mesh { get; private set; }
 
-        internal Chunk(Vector2i position, Block[,,] blocks)
+        internal bool IsGenerated { get; private set; } = false;
+        internal bool IsUnloaded { get; private set; } = false;
+
+        internal Chunk(Vector2i position)
         {
             this.Position = position;
-            this.Blocks = blocks;
+            GenerateChunk();
+        }
+
+        internal void GenerateChunk()
+        {
+            Block bufferBlock = new Block();
+
+            int height = 32 + (Size.Y / 2);
+
+            for (int x = 0; x < Size.X; x++)
+            {
+                for (int z = 0; z < Size.Z; z++)
+                {
+                    for (int y = 0; y <= height; y++)
+                    {
+                        bufferBlock.Position.X = x - (Size.X / 2);
+                        bufferBlock.Position.Y = y - (Size.Y / 2);
+                        bufferBlock.Position.Z = z - (Size.Z / 2);
+                        if (y == height)
+                            bufferBlock.Type = BlockType.Grass;
+                        else if (y < height && y > height - 5)
+                            bufferBlock.Type = BlockType.Dirt;
+                        else
+                            bufferBlock.Type = BlockType.Stone;
+                        this.Blocks[x, y, z] = (Block)bufferBlock.Clone();
+                    }
+                    for (int y = height + 1; y < Size.Y; y++)
+                    {
+                        bufferBlock.Position.X = x - (Size.X / 2);
+                        bufferBlock.Position.Y = y - (Size.Y / 2);
+                        bufferBlock.Position.Z = z - (Size.Z / 2);
+                        bufferBlock.Type = BlockType.Air;
+                        this.Blocks[x, y, z] = (Block)bufferBlock.Clone();
+                    }
+                }
+            }
+            this.IsGenerated = true;
         }
 
         internal void Bake(List<Chunk> neighborChunks)
@@ -111,7 +150,7 @@ namespace Minecraft.WorldBuilding
             {
                 if (offset.X == 1)
                 {
-                    int index = IndexOfChunk(new Vector2i(1, 0) + this.Position, neighborChunks);
+                    int index = neighborChunks.IndexOf(new Vector2i(1, 0) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].Blocks[Chunk.Size.X - 1, position.Y, position.Z].Type != BlockType.Air)
@@ -122,7 +161,7 @@ namespace Minecraft.WorldBuilding
                 }
                 else if (offset.X == -1)
                 {
-                    int index = IndexOfChunk(new Vector2i(-1, 0) + this.Position, neighborChunks);
+                    int index = neighborChunks.IndexOf(new Vector2i(-1, 0) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].Blocks[0, position.Y, position.Z].Type != BlockType.Air)
@@ -133,7 +172,7 @@ namespace Minecraft.WorldBuilding
                 }
                 else if (offset.Z == 1)
                 {
-                    int index = IndexOfChunk(new Vector2i(0, 1) + this.Position, neighborChunks);
+                    int index = neighborChunks.IndexOf(new Vector2i(0, 1) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].Blocks[position.X, position.Y, Chunk.Size.Z - 1].Type != BlockType.Air)
@@ -144,7 +183,7 @@ namespace Minecraft.WorldBuilding
                 }
                 else if (offset.Z == -1)
                 {
-                    int index = IndexOfChunk(new Vector2i(0, -1) + this.Position, neighborChunks);
+                    int index = neighborChunks.IndexOf(new Vector2i(0, -1) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].Blocks[position.X, position.Y, 0].Type != BlockType.Air)
@@ -157,56 +196,10 @@ namespace Minecraft.WorldBuilding
             return false;
         }
 
-        internal static Block[,,] GenerateChunk()
+        internal void Unload()
         {
-            Block[,,] blocks = new Block[Size.X, Size.Y, Size.Z];
-            Block bufferBlock = new Block();
-
-            int height = 32 + (Size.Y / 2);
-
-            for (int x = 0; x < Size.X; x++)
-            {
-                for (int z = 0; z < Size.Z; z++)
-                {
-                    for (int y = 0; y <= height; y++)
-                    {
-                        bufferBlock.Position.X = x - (Size.X / 2);
-                        bufferBlock.Position.Y = y - (Size.Y / 2);
-                        bufferBlock.Position.Z = z - (Size.Z / 2);
-                        if (y == height)
-                            bufferBlock.Type = BlockType.Grass;
-                        else if (y < height && y > height - 5)
-                            bufferBlock.Type = BlockType.Dirt;
-                        else
-                            bufferBlock.Type = BlockType.Stone;
-                        blocks[x, y, z] = (Block)bufferBlock.Clone();
-                    }
-                    for (int y = height + 1; y < Size.Y; y++)
-                    {
-                        bufferBlock.Position.X = x - (Size.X / 2);
-                        bufferBlock.Position.Y = y - (Size.Y / 2);
-                        bufferBlock.Position.Z = z - (Size.Z / 2);
-                        bufferBlock.Type = BlockType.Air;
-                        blocks[x, y, z] = (Block)bufferBlock.Clone();
-                    }
-                }
-            }
-            return blocks;
-        }
-
-        internal static int IndexOfChunk(Vector2i position, List<Chunk> chunks)
-        {
-            for (int i = 0; i < chunks.Count; i++)
-            {
-                if (chunks[i] != null)
-                {
-                    if (chunks[i].Position == position)
-                    {
-                        return i;
-                    }
-                }
-            }
-            return -1;
+            this.Mesh.Dispose();
+            this.IsUnloaded = true;
         }
 
         private static bool IsOutOfRange(Vector3i position, Vector3i size)
@@ -224,6 +217,5 @@ namespace Minecraft.WorldBuilding
                 return false;
             }
         }
-
     }
 }

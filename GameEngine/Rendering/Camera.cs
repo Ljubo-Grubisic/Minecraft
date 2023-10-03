@@ -7,12 +7,15 @@ using System.Text;
 
 namespace GameEngine.Rendering
 {
-    public class Camera
+    public class Camera : ICloneable
     {
         public Vector3 Position { get; set; }
+
         public float AspectRatio { get; set; }
         public float Speed { get; set; } = 2.5f;
         public float Sensitivity { get; set; } = 0.1f;
+        public float MinViewDistance { get; set; } = 0.1f;
+        public float MaxViewDistance { get; set; } = 100.0f;
 
         /// <summary>
         /// In radians
@@ -67,7 +70,15 @@ namespace GameEngine.Rendering
         public float Pitch
         {
             get => MathHelper.RadiansToDegrees(pitch);
-            set { pitch = MathHelper.DegreesToRadians(value); }
+            set 
+            {
+                if (value > 89)
+                    pitch = MathHelper.DegreesToRadians(89);
+                else if (value < -89)
+                    pitch = MathHelper.DegreesToRadians(-89);
+                else
+                    pitch = MathHelper.DegreesToRadians(value);
+            }
         }
 
         public Camera(Vector3 position, float aspectRatio, float fov = 90)
@@ -79,7 +90,7 @@ namespace GameEngine.Rendering
 
         internal Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(fov - zoom, AspectRatio, 0.1f, 100.0f);
+            return Matrix4.CreatePerspectiveFieldOfView(fov - zoom, AspectRatio, MinViewDistance, MaxViewDistance);
         }
 
         internal Matrix4 GetViewMatrix()
@@ -132,6 +143,11 @@ namespace GameEngine.Rendering
             {
                 Position += Speed * time * Vector3.Normalize(Vector3.Cross(Front, Up));
             }
+        }
+
+        public object Clone()
+        {
+            return new Camera(Position, AspectRatio, Fov);
         }
     }
 }
