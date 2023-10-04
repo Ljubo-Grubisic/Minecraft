@@ -20,27 +20,24 @@ namespace Minecraft
 
     internal class Player : ICloneable
     {
-        internal int ViewDistance { get; set; } = 16;
+        internal int RenderDistance { get; set; } = 8;
         internal PlayerMovementType MovementType { get; set; }
 
-        internal Vector3 Position { get => Camera.Position; set => Camera.Position = value; }
+        internal Vector3 Position { get; set; } 
 
-        private Camera Camera { get; set; }
-
-        internal Player(Camera camera, PlayerMovementType movementType)
+        internal Player(PlayerMovementType movementType)
         {
-            Camera = camera;
             MovementType = movementType;
         }
 
         internal void Update(Camera camera)
         {
-            this.Camera = camera;
+            Position = camera.Position;
         }
 
         public object Clone()
         {
-            return new Player(Camera, MovementType);
+            return new Player(MovementType);
         }
     }
 }

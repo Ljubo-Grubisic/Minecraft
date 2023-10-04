@@ -18,22 +18,41 @@ namespace Minecraft
 
         private bool WireFrameMode = false;
 
+        private List<Action> Actions { get; set; } = new List<Action>();
+        private bool IsActionInProccess = false;
+
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
-            
+
+        }
+
+        internal void QueueOperation(Action operation)
+        {
+            ThreadPool.QueueUserWorkItem((object state) =>
+            {
+                bool running = true;
+                while (running)
+                {
+                    if (!IsActionInProccess)
+                    {
+                        Actions.Add(operation);
+                        running = false;
+                        break;
+                    }
+                }
+            });
         }
 
         protected override void OnInit()
         {
             Block.Init();
-            Player = new Player(Camera, PlayerMovementType.FreeCam);
-            ChunkManager.Init(Player);
-            ChunkManager.BakeChunks();
+            Player = new Player(PlayerMovementType.FreeCam);
+            ChunkManager.Init();
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f };
+            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f, Speed = 10f };
         }
 
         protected override void OnLoadShaders()
@@ -52,8 +71,14 @@ namespace Minecraft
             Console.WriteLine(Math.Round(1 / args.Time));
             //Console.WriteLine(Camera.Position);
 
+            IsActionInProccess = true;
+            foreach (Action operation in Actions)
+            {
+                operation.Invoke();
+            }
+            IsActionInProccess = false;
+
             Player.Update(Camera);
-            ChunkManager.Update(Player);
 
             if (KeyboardManager.OnKeyPressed(Keys.P))
             {
@@ -76,7 +101,7 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            foreach (Chunk chunk in ChunkManager.Chunks)
+            foreach (Chunk chunk in ChunkManager.LoadedChunks)
             {
                 GL.BindVertexArray(chunk.Mesh.VAO);
 
@@ -92,7 +117,6 @@ namespace Minecraft
 
         protected override void OnWindowResize(ResizeEventArgs args)
         {
-            Console.WriteLine("Resized");
         }
     }
 }

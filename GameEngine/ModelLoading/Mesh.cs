@@ -88,6 +88,7 @@ namespace GameEngine.ModelLoading
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoords)));
 
             GL.BindVertexArray(0);
+
         }
 
         public void Dispose()

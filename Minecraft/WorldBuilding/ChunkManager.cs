@@ -1,12 +1,29 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using GameEngine.Rendering;
+using System.Threading;
+using Minecraft;
 
 namespace Minecraft.WorldBuilding
 {
     internal static class Extensions
     {
         internal static bool Contains(this List<Chunk> values, Vector2i position)
+        {
+            foreach (Chunk value in values)
+            {
+                if (value != null)
+                {
+                    if (value.Position == position)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal static bool Contains(this Queue<Chunk> values, Vector2i position)
         {
             foreach (Chunk value in values)
             {
@@ -38,10 +55,21 @@ namespace Minecraft.WorldBuilding
         }
     }
 
+    internal enum ChunkLoadingSteps
+    {
+        None = 0,
+        Generate,
+        Bake,
+        Unload
+    }
+
     internal static class ChunkManager
     {
-        internal static List<Chunk> Chunks = new List<Chunk>();
-        internal static Queue<Chunk> ChunksWaitingToLoad = new Queue<Chunk>();
+        internal static List<Chunk> LoadedChunks = new List<Chunk>();
+
+        private static Queue<Vector2i> ChunksWaitingToGenerate = new Queue<Vector2i>();
+        private static Queue<Chunk> ChunksWaitingToBake = new Queue<Chunk>();
+        private static Queue<Chunk> ChunksWaitingToUnload = new Queue<Chunk>();
 
         internal static int SpawnChunkSize { get; set; } = 5;
 
@@ -49,19 +77,12 @@ namespace Minecraft.WorldBuilding
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static Thread ChunkManagingThread;
-        private static Player Player;
 
-        internal static void Init(Player player)
+        internal static void Init()
         {
-            Player = player;
             LoadSpawnChunks();
             ChunkManagingThread = new Thread(Loop) { IsBackground = true, Name = "ChunkManagingThread", Priority = ThreadPriority.AboveNormal };
             ChunkManagingThread.Start();
-        }
-
-        internal static void Update(Player player)
-        {
-            Player = player;
         }
 
         internal static void Loop()
@@ -70,7 +91,7 @@ namespace Minecraft.WorldBuilding
             float previousTimeElapsed = 0f;
             float deltaTime = 0f;
             float totalTimeElapsed = 0f;
-            int counter = 3;
+            ChunkLoadingSteps chunkLoadingSteps = ChunkLoadingSteps.None;
 
             while (ChunkManagingThread.IsAlive)
             {
@@ -84,16 +105,66 @@ namespace Minecraft.WorldBuilding
                 {
                     totalTimeBeforeUpdate = 0;
 
-                    if (counter == 3)
+                    List<Vector2i> ChunkPositionsAroundPlayer = ChunkPositionAroundPlayer(Program.Minecraft.Player);
+                    foreach (Vector2i position in ChunkPositionsAroundPlayer)
                     {
-
-
-                        counter = 0;
+                        if (!ChunkManagerContainsChunk(position))
+                        {
+                            ChunksWaitingToGenerate.Enqueue(position);
+                        }
                     }
 
-                    counter++;
+                    switch (chunkLoadingSteps)
+                    {
+                        case ChunkLoadingSteps.Generate:
+                            Vector2i chunkPosition = ChunksWaitingToGenerate.Dequeue();
+                            ChunksWaitingToBake.Enqueue(new Chunk(chunkPosition));
+                            break;
+                        case ChunkLoadingSteps.Bake:
+                            Chunk chunk = ChunksWaitingToBake.Dequeue();
+                            Program.Minecraft.QueueOperation(() =>
+                            {
+                                BakeChunk(chunk);
+                                LoadedChunks.Add(chunk);
+                            });
+                            break;
+                        case ChunkLoadingSteps.Unload:
+
+                            chunkLoadingSteps = ChunkLoadingSteps.None;
+                            break;
+                    }
+
+                    chunkLoadingSteps++;
                 }
             }
+        }
+
+        private static List<Vector2i> ChunkPositionAroundPlayer(Player player)
+        {
+            List<Vector2i> ChunkPositions = new List<Vector2i>();
+            Vector2 PlayerPositionInChunk = player.Position.Xz / Chunk.Size.Xz;
+
+            for (int x = 0; x < player.RenderDistance; x++)
+            {
+                for (int z = 0; z < player.RenderDistance; z++)
+                {
+                    ChunkPositions.Add(new Vector2i((int)Math.Round(PlayerPositionInChunk.X + x), (int)Math.Round(PlayerPositionInChunk.Y + z)));
+                }
+            }
+
+            return ChunkPositions;
+        }
+
+        private static bool ChunkManagerContainsChunk(Vector2i position)
+        {
+            if (LoadedChunks.Contains(position))
+                return true;
+            else if (ChunksWaitingToGenerate.Contains(position))
+                return true;
+            else if (ChunksWaitingToBake.Contains(position))
+                return true;
+            else
+                return false;
         }
 
         internal static void LoadSpawnChunks()
@@ -102,26 +173,54 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < SpawnChunkSize; j++)
                 {
-                    Chunks.Add(new Chunk(new Vector2i(i - (SpawnChunkSize / 2), j - (SpawnChunkSize / 2))));
+                    LoadedChunks.Add(new Chunk(new Vector2i(i - (SpawnChunkSize / 2), j - (SpawnChunkSize / 2))));
                 }
             }
 
-            BakeChunks();
+            BakeAllChunks();
         }
 
-        internal static void BakeChunks() 
+        internal static void BakeChunk(Chunk chunk)
         {
             List<int> index = new List<int>();
             List<Chunk?> neighbors = new List<Chunk?>();
-            for (int i = 0; i < Chunks.Count; i++)
+
+            index.Clear();
+            neighbors.Clear();
+
+            index.Add(LoadedChunks.IndexOf(new Vector2i(-1, 0) + chunk.Position));
+            index.Add(LoadedChunks.IndexOf(new Vector2i(1, 0) + chunk.Position));
+            index.Add(LoadedChunks.IndexOf(new Vector2i(0, -1) + chunk.Position));
+            index.Add(LoadedChunks.IndexOf(new Vector2i(0, 1) + chunk.Position));
+
+            for (int j = 0; j < index.Count; j++)
+            {
+                if (index[j] == -1)
+                {
+                    neighbors.Add(null);
+                }
+                else
+                {
+                    neighbors.Add(LoadedChunks[index[j]]);
+                }
+            }
+
+            chunk.Bake(neighbors);
+        } 
+
+        internal static void BakeAllChunks()
+        {
+            List<int> index = new List<int>();
+            List<Chunk?> neighbors = new List<Chunk?>();
+            for (int i = 0; i < LoadedChunks.Count; i++)
             {
                 index.Clear();
                 neighbors.Clear();
 
-                index.Add(Chunks.IndexOf(new Vector2i(-1, 0) + Chunks[i].Position));
-                index.Add(Chunks.IndexOf(new Vector2i(1, 0) + Chunks[i].Position));
-                index.Add(Chunks.IndexOf(new Vector2i(0, -1) + Chunks[i].Position));
-                index.Add(Chunks.IndexOf(new Vector2i(0, 1) + Chunks[i].Position));
+                index.Add(LoadedChunks.IndexOf(new Vector2i(-1, 0) + LoadedChunks[i].Position));
+                index.Add(LoadedChunks.IndexOf(new Vector2i(1, 0) + LoadedChunks[i].Position));
+                index.Add(LoadedChunks.IndexOf(new Vector2i(0, -1) + LoadedChunks[i].Position));
+                index.Add(LoadedChunks.IndexOf(new Vector2i(0, 1) + LoadedChunks[i].Position));
 
                 for (int j = 0; j < index.Count; j++)
                 {
@@ -131,11 +230,11 @@ namespace Minecraft.WorldBuilding
                     }
                     else
                     {
-                        neighbors.Add(Chunks[index[j]]);
+                        neighbors.Add(LoadedChunks[index[j]]);
                     }
                 }
 
-                Chunks[i].Bake(neighbors);
+                LoadedChunks[i].Bake(neighbors);
             }
         }
     }
