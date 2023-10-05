@@ -18,7 +18,7 @@ namespace Minecraft
 
         private bool WireFrameMode = false;
 
-        private List<Action> Actions { get; set; } = new List<Action>();
+        private Queue<Action> Actions { get; set; } = new Queue<Action>();
         private bool IsActionInProccess = false;
 
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
@@ -33,9 +33,9 @@ namespace Minecraft
                 bool running = true;
                 while (running)
                 {
-                    if (!IsActionInProccess)
+                    lock (Actions)
                     {
-                        Actions.Add(operation);
+                        Actions.Enqueue(operation);
                         running = false;
                         break;
                     }
@@ -71,12 +71,14 @@ namespace Minecraft
             Console.WriteLine(Math.Round(1 / args.Time));
             //Console.WriteLine(Camera.Position);
 
-            IsActionInProccess = true;
-            foreach (Action operation in Actions)
+            lock (Actions)
             {
-                operation.Invoke();
+                for (int i = 0; i < Actions.Count; i++)
+                {
+                    lock (ChunkManager.LoadedChunks)
+                        Actions.Dequeue().Invoke();
+                }
             }
-            IsActionInProccess = false;
 
             Player.Update(Camera);
 
@@ -101,18 +103,22 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            foreach (Chunk chunk in ChunkManager.LoadedChunks)
+            lock (ChunkManager.LoadedChunks)
             {
-                GL.BindVertexArray(chunk.Mesh.VAO);
+                foreach (Chunk chunk in ChunkManager.LoadedChunks)
+                {
+                    GL.BindVertexArray(chunk.Mesh.VAO);
 
-                Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
+                    Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
 
-                GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+                    GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
 
-                GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
+                    GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
 
-                GL.BindVertexArray(0);
+                    GL.BindVertexArray(0);
+                }
             }
+           
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)

@@ -1,7 +1,6 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.Threading;
-using Minecraft;
+using System;
 
 namespace Minecraft.WorldBuilding
 {
@@ -58,9 +57,9 @@ namespace Minecraft.WorldBuilding
     internal enum ChunkLoadingSteps
     {
         None = 0,
-        Generate,
-        Bake,
-        Unload
+        Generate = 1,
+        Bake = 2,
+        Unload = 3
     }
 
     internal static class ChunkManager
@@ -73,7 +72,7 @@ namespace Minecraft.WorldBuilding
 
         internal static int SpawnChunkSize { get; set; } = 5;
 
-        internal static int TicksPerSecond { get; set; } = 20;
+        internal static int TicksPerSecond { get; set; } = 60;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static Thread ChunkManagingThread;
@@ -85,7 +84,7 @@ namespace Minecraft.WorldBuilding
             ChunkManagingThread.Start();
         }
 
-        internal static void Loop()
+        private static void Loop()
         {
             float totalTimeBeforeUpdate = 0f;
             float previousTimeElapsed = 0f;
@@ -117,17 +116,35 @@ namespace Minecraft.WorldBuilding
                     switch (chunkLoadingSteps)
                     {
                         case ChunkLoadingSteps.Generate:
-                            Vector2i chunkPosition = ChunksWaitingToGenerate.Dequeue();
-                            ChunksWaitingToBake.Enqueue(new Chunk(chunkPosition));
-                            break;
-                        case ChunkLoadingSteps.Bake:
-                            Chunk chunk = ChunksWaitingToBake.Dequeue();
-                            Program.Minecraft.QueueOperation(() =>
+
+                            if (ChunksWaitingToGenerate.Count != 0)
                             {
-                                BakeChunk(chunk);
-                                LoadedChunks.Add(chunk);
-                            });
+                                Vector2i chunkPosition = ChunksWaitingToGenerate.Dequeue();
+                                Chunk chunk = new Chunk(chunkPosition);
+                                ChunksWaitingToBake.Enqueue(chunk);
+                                List<Chunk> neighbors = FindNeighbors(FindNeighborIndexs(chunk));
+
+                                foreach (Chunk neighbor in neighbors)
+                                {
+                                    if (neighbor != null)
+                                        ChunksWaitingToBake.Enqueue(neighbor);
+                                }
+                            }
                             break;
+
+                        case ChunkLoadingSteps.Bake:
+
+                            if (ChunksWaitingToBake.Count != 0)
+                            {
+                                Chunk chunk = ChunksWaitingToBake.Dequeue();
+                                Program.Minecraft.QueueOperation(() =>
+                                {
+                                    LoadedChunks.Add(chunk);
+                                    BakeChunk(chunk);
+                                });
+                            }
+                            break;
+
                         case ChunkLoadingSteps.Unload:
 
                             chunkLoadingSteps = ChunkLoadingSteps.None;
@@ -148,7 +165,7 @@ namespace Minecraft.WorldBuilding
             {
                 for (int z = 0; z < player.RenderDistance; z++)
                 {
-                    ChunkPositions.Add(new Vector2i((int)Math.Round(PlayerPositionInChunk.X + x), (int)Math.Round(PlayerPositionInChunk.Y + z)));
+                    ChunkPositions.Add(new Vector2i((int)Math.Round(PlayerPositionInChunk.X - player.RenderDistance / 2 + x), (int)Math.Round(PlayerPositionInChunk.Y - player.RenderDistance / 2 + z)));
                 }
             }
 
@@ -157,17 +174,20 @@ namespace Minecraft.WorldBuilding
 
         private static bool ChunkManagerContainsChunk(Vector2i position)
         {
-            if (LoadedChunks.Contains(position))
-                return true;
-            else if (ChunksWaitingToGenerate.Contains(position))
-                return true;
-            else if (ChunksWaitingToBake.Contains(position))
-                return true;
-            else
-                return false;
+            lock (LoadedChunks)
+            {
+                if (LoadedChunks.Contains(position))
+                    return true;
+                else if (ChunksWaitingToGenerate.Contains(position))
+                    return true;
+                else if (ChunksWaitingToBake.Contains(position))
+                    return true;
+                else
+                    return false;
+            }
         }
 
-        internal static void LoadSpawnChunks()
+        private static void LoadSpawnChunks()
         {
             for (int i = 0; i < SpawnChunkSize; i++)
             {
@@ -180,62 +200,54 @@ namespace Minecraft.WorldBuilding
             BakeAllChunks();
         }
 
-        internal static void BakeChunk(Chunk chunk)
+        private static void BakeChunk(Chunk chunk)
+        {
+            chunk.Bake(FindNeighbors(FindNeighborIndexs(chunk)));
+        }
+
+        private static void BakeAllChunks()
         {
             List<int> index = new List<int>();
             List<Chunk?> neighbors = new List<Chunk?>();
+            for (int i = 0; i < LoadedChunks.Count; i++)
+            {
+                index = FindNeighborIndexs(LoadedChunks[i]);
+                neighbors = FindNeighbors(index);
 
-            index.Clear();
-            neighbors.Clear();
+                LoadedChunks[i].Bake(neighbors);
+            }
+        }
+
+        
+        private static List<Chunk?> FindNeighbors(List<int> neighborsIndex)
+        {
+            List<Chunk?> neighbors = new List<Chunk?>();
+
+            for (int j = 0; j < neighborsIndex.Count; j++)
+            {
+                if (neighborsIndex[j] == -1)
+                {
+                    neighbors.Add(null);
+                }
+                else
+                {
+                    neighbors.Add(LoadedChunks[neighborsIndex[j]]);
+                }
+            }
+
+            return neighbors;
+        }
+
+        private static List<int> FindNeighborIndexs(Chunk chunk)
+        {
+            List<int> index = new List<int>();
 
             index.Add(LoadedChunks.IndexOf(new Vector2i(-1, 0) + chunk.Position));
             index.Add(LoadedChunks.IndexOf(new Vector2i(1, 0) + chunk.Position));
             index.Add(LoadedChunks.IndexOf(new Vector2i(0, -1) + chunk.Position));
             index.Add(LoadedChunks.IndexOf(new Vector2i(0, 1) + chunk.Position));
 
-            for (int j = 0; j < index.Count; j++)
-            {
-                if (index[j] == -1)
-                {
-                    neighbors.Add(null);
-                }
-                else
-                {
-                    neighbors.Add(LoadedChunks[index[j]]);
-                }
-            }
-
-            chunk.Bake(neighbors);
-        } 
-
-        internal static void BakeAllChunks()
-        {
-            List<int> index = new List<int>();
-            List<Chunk?> neighbors = new List<Chunk?>();
-            for (int i = 0; i < LoadedChunks.Count; i++)
-            {
-                index.Clear();
-                neighbors.Clear();
-
-                index.Add(LoadedChunks.IndexOf(new Vector2i(-1, 0) + LoadedChunks[i].Position));
-                index.Add(LoadedChunks.IndexOf(new Vector2i(1, 0) + LoadedChunks[i].Position));
-                index.Add(LoadedChunks.IndexOf(new Vector2i(0, -1) + LoadedChunks[i].Position));
-                index.Add(LoadedChunks.IndexOf(new Vector2i(0, 1) + LoadedChunks[i].Position));
-
-                for (int j = 0; j < index.Count; j++)
-                {
-                    if (index[j] == -1)
-                    {
-                        neighbors.Add(null);
-                    }
-                    else
-                    {
-                        neighbors.Add(LoadedChunks[index[j]]);
-                    }
-                }
-
-                LoadedChunks[i].Bake(neighbors);
-            }
+            return index;
         }
     }
 }
