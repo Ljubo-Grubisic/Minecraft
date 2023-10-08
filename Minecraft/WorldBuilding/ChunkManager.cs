@@ -1,6 +1,7 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System;
+using System.Windows.Markup;
 
 namespace Minecraft.WorldBuilding
 {
@@ -70,9 +71,16 @@ namespace Minecraft.WorldBuilding
         private static Queue<Chunk> ChunksWaitingToBake = new Queue<Chunk>();
         private static Queue<Chunk> ChunksWaitingToUnload = new Queue<Chunk>();
 
+        /// <summary>
+        /// This list contains chunks that are just know loaded. The point of this list
+        /// is to remove the problem where a chunk is loaded but isnt it LoadedChunks
+        /// because the main thread hasnt added it yet
+        /// </summary>
+        private static List<Chunk> ChunksJustLoaded = new List<Chunk>();
+
         internal static int SpawnChunkSize { get; set; } = 5;
 
-        internal static int TicksPerSecond { get; set; } = 60;
+        internal static int TicksPerSecond { get; set; } = 100000;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static Thread ChunkManagingThread;
@@ -113,16 +121,39 @@ namespace Minecraft.WorldBuilding
                         }
                     }
 
+                    //foreach (Chunk chunk in LoadedChunks)
+                    //{
+                    //    bool IsChunkInRenderDistance = false;
+                    //    foreach (Vector2i position in ChunkPositionsAroundPlayer)
+                    //    {
+                    //        if (chunk.Position == position)
+                    //        {
+                    //            IsChunkInRenderDistance = true;
+                    //            break;
+                    //        }
+                    //    }
+                    //    if (!IsChunkInRenderDistance)
+                    //    {
+                    //        ChunksWaitingToUnload.Enqueue(chunk);
+                    //    }
+                    //}
+
                     switch (chunkLoadingSteps)
                     {
                         case ChunkLoadingSteps.Generate:
 
                             if (ChunksWaitingToGenerate.Count != 0)
                             {
-                                Vector2i chunkPosition = ChunksWaitingToGenerate.Dequeue();
-                                Chunk chunk = new Chunk(chunkPosition);
-                                ChunksWaitingToBake.Enqueue(chunk);
-                                List<Chunk> neighbors = FindNeighbors(FindNeighborIndexs(chunk));
+                                Chunk chunkGenerated = new Chunk(ChunksWaitingToGenerate.Dequeue());
+                                ChunksWaitingToBake.Enqueue(chunkGenerated);
+
+                                ChunksJustLoaded = RemoveItems(ChunksJustLoaded, LoadedChunks);
+                                ChunksJustLoaded.Add(chunkGenerated);
+
+                                List<Chunk> totalChunksList = new List<Chunk>();
+                                totalChunksList.AddRange(LoadedChunks);
+                                totalChunksList.AddRange(ChunksJustLoaded);
+                                List<Chunk> neighbors = FindNeighbors(FindNeighborIndexs(chunkGenerated, totalChunksList), totalChunksList);
 
                                 foreach (Chunk neighbor in neighbors)
                                 {
@@ -147,10 +178,14 @@ namespace Minecraft.WorldBuilding
 
                         case ChunkLoadingSteps.Unload:
 
+                            //if (ChunksWaitingToUnload.Count != 0)
+                            //{
+                            //    Chunk chunk = ChunksWaitingToUnload.Dequeue();
+                            //    chunk.Unload();
+                            //}
                             chunkLoadingSteps = ChunkLoadingSteps.None;
                             break;
                     }
-
                     chunkLoadingSteps++;
                 }
             }
@@ -181,6 +216,8 @@ namespace Minecraft.WorldBuilding
                 else if (ChunksWaitingToGenerate.Contains(position))
                     return true;
                 else if (ChunksWaitingToBake.Contains(position))
+                    return true;
+                else if (ChunksJustLoaded.Contains(position))
                     return true;
                 else
                     return false;
@@ -237,17 +274,69 @@ namespace Minecraft.WorldBuilding
 
             return neighbors;
         }
+        private static List<Chunk?> FindNeighbors(List<int> neighborsIndex, List<Chunk> chunks)
+        {
+            List<Chunk?> neighbors = new List<Chunk?>();
+
+            for (int j = 0; j < neighborsIndex.Count; j++)
+            {
+                if (neighborsIndex[j] == -1)
+                {
+                    neighbors.Add(null);
+                }
+                else
+                {
+                    neighbors.Add(chunks[neighborsIndex[j]]);
+                }
+            }
+
+            return neighbors;
+        }
 
         private static List<int> FindNeighborIndexs(Chunk chunk)
         {
-            List<int> index = new List<int>();
-
-            index.Add(LoadedChunks.IndexOf(new Vector2i(-1, 0) + chunk.Position));
-            index.Add(LoadedChunks.IndexOf(new Vector2i(1, 0) + chunk.Position));
-            index.Add(LoadedChunks.IndexOf(new Vector2i(0, -1) + chunk.Position));
-            index.Add(LoadedChunks.IndexOf(new Vector2i(0, 1) + chunk.Position));
+            List<int> index = new List<int>
+            {
+                LoadedChunks.IndexOf(new Vector2i(-1, 0) + chunk.Position),
+                LoadedChunks.IndexOf(new Vector2i(1, 0) + chunk.Position),
+                LoadedChunks.IndexOf(new Vector2i(0, -1) + chunk.Position),
+                LoadedChunks.IndexOf(new Vector2i(0, 1) + chunk.Position)
+            };
 
             return index;
+        }
+
+        private static List<int> FindNeighborIndexs(Chunk chunk, List<Chunk> chunks)
+        {
+            List<int> index = new List<int>
+            {
+                chunks.IndexOf(new Vector2i(-1, 0) + chunk.Position),
+                chunks.IndexOf(new Vector2i(1, 0) + chunk.Position),
+                chunks.IndexOf(new Vector2i(0, -1) + chunk.Position),
+                chunks.IndexOf(new Vector2i(0, 1) + chunk.Position)
+            };
+
+            return index;
+        }
+
+        private static List<T> RemoveItems<T>(List<T> values, List<T> valuesToBeRemoved)
+        {
+            List<int> indicies = new List<int>();
+            for (int i = values.Count - 1; i >= 0; i--)
+            {
+                if (valuesToBeRemoved.Contains(values[i]))
+                {
+                    indicies.Add(i);
+                }
+            }
+
+            foreach (int index in indicies)
+            {
+                values.RemoveAt(index);
+            }
+            indicies.Clear();
+
+            return values;
         }
     }
 }
