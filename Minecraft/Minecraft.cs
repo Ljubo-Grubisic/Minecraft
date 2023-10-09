@@ -75,7 +75,7 @@ namespace Minecraft
             {
                 for (int i = 0; i < Actions.Count; i++)
                 {
-                    lock (ChunkManager.LoadedChunks)
+                    lock (ChunkManager.ChunksLoaded)
                         Actions.Dequeue().Invoke();
                 }
             }
@@ -103,9 +103,9 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            lock (ChunkManager.LoadedChunks)
+            lock (ChunkManager.ChunksLoaded)
             {
-                foreach (Chunk chunk in ChunkManager.LoadedChunks)
+                foreach (Chunk chunk in ChunkManager.ChunksLoaded)
                 {
                     GL.BindVertexArray(chunk.Mesh.VAO);
 
@@ -118,7 +118,7 @@ namespace Minecraft
                     GL.BindVertexArray(0);
                 }
             }
-           
+
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)
