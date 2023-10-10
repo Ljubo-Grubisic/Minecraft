@@ -8,6 +8,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using GameEngine.ModelLoading;
 
 namespace Minecraft
 {
@@ -19,7 +20,6 @@ namespace Minecraft
         private bool WireFrameMode = false;
 
         private Queue<Action> Actions { get; set; } = new Queue<Action>();
-        private bool IsActionInProccess = false;
 
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
@@ -52,7 +52,7 @@ namespace Minecraft
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f, Speed = 20f };
+            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f, Speed = 100f };
         }
 
         protected override void OnLoadShaders()

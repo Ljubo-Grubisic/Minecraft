@@ -112,7 +112,7 @@ namespace Minecraft.WorldBuilding
 
         internal static int SpawnChunkSize { get; set; } = 5;
 
-        internal static int TicksPerSecond { get; set; } = 60;
+        internal static int TicksPerSecond { get; set; } = 1000;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static Thread ChunkManagingThread;
@@ -131,6 +131,7 @@ namespace Minecraft.WorldBuilding
             float deltaTime = 0f;
             float totalTimeElapsed = 0f;
             ChunkLoadingSteps chunkLoadingSteps = ChunkLoadingSteps.None;
+            int garbageCollectorCounter = 0;
 
             while (ChunkManagingThread.IsAlive)
             {
@@ -177,7 +178,7 @@ namespace Minecraft.WorldBuilding
                     }
 
                     ChunksJustGenerated.RemoveUnloadedItems();
-                    
+                    ChunksJustGenerated = RemoveItems(ChunksJustGenerated, ChunksLoaded);
 
                     for (int i = 0; i < ChunksLoaded.Count; i++)
                     {
@@ -217,7 +218,12 @@ namespace Minecraft.WorldBuilding
 
                             if (ChunksWaitingToBake.Count != 0)
                             {
-                                Chunk chunkBaked = ChunksWaitingToBake.Dequeue();
+                                Chunk chunkBaked;
+                                do
+                                {
+                                    chunkBaked = ChunksWaitingToBake.Dequeue();
+                                } 
+                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
                                 if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) && !chunkBaked.IsUnloaded)
                                 {
@@ -240,16 +246,25 @@ namespace Minecraft.WorldBuilding
                                 lock (ChunksLoaded)
                                     ChunksLoaded.Remove(chunkUnloaded.Position);
 
-                                List<Chunk> totalChunksList = new List<Chunk>();
+                                List<Chunk> totalChunksList = new List<Chunk> { Capacity = ChunksLoaded.Count + ChunksJustGenerated.Count };
                                 totalChunksList.AddRange(ChunksLoaded);
                                 totalChunksList.AddRange(ChunksJustGenerated);
                                 List<Chunk> neighbors = FindNeighbors(FindNeighborIndexs(chunkUnloaded, totalChunksList), totalChunksList);
+                                totalChunksList.Clear();
 
                                 foreach (Chunk neighbor in neighbors)
                                 {
                                     if (neighbor != null && !ChunksWaitingToUnload.Contains(neighbor.Position))
                                         ChunksWaitingToBake.Enqueue(neighbor);
                                 }
+
+                                if (garbageCollectorCounter == 2)
+                                {
+                                    GC.Collect();
+                                    garbageCollectorCounter = 0;
+                                }
+
+                                garbageCollectorCounter++;
                             }
                             chunkLoadingSteps = ChunkLoadingSteps.None;
                             break;
@@ -392,6 +407,7 @@ namespace Minecraft.WorldBuilding
         private static List<T> RemoveItems<T>(List<T> values, List<T> valuesToBeRemoved)
         {
             List<int> indicies = new List<int>();
+            bool needsGarbageCollector = false;
             for (int i = values.Count - 1; i >= 0; i--)
             {
                 if (valuesToBeRemoved.Contains(values[i]))
@@ -400,11 +416,17 @@ namespace Minecraft.WorldBuilding
                 }
             }
 
+            if (indicies.Count > 50)
+                needsGarbageCollector = true;
+            
             foreach (int index in indicies)
             {
                 values.RemoveAt(index);
             }
             indicies.Clear();
+
+            if (needsGarbageCollector)
+                GC.Collect();
 
             return values;
         }

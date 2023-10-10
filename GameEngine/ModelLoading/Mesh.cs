@@ -18,9 +18,9 @@ namespace GameEngine.ModelLoading
         public List<int> Indices;
         public List<Texture> Textures;
 
-        public int VAO { get; set; }
-        public int VBO { get; set; }
-        public int EBO { get; set; }
+        public int VAO { get; private set; }
+        public int VBO { get; private set; }
+        public int EBO { get; private set; }
 
         public Mesh(List<Vertex> vertices, List<int> indices, List<Texture> textures)
         {
@@ -88,7 +88,6 @@ namespace GameEngine.ModelLoading
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoords)));
 
             GL.BindVertexArray(0);
-
         }
 
         public void Dispose()

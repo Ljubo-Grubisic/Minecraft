@@ -20,7 +20,7 @@ namespace Minecraft
 
     internal class Player : ICloneable
     {
-        internal int RenderDistance { get; set; } = 7;
+        internal int RenderDistance { get; set; } = 17;
         internal PlayerMovementType MovementType { get; set; }
 
         internal Vector3 Position { get; set; } 

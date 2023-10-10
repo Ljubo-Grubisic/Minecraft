@@ -14,11 +14,14 @@ namespace Minecraft.WorldBuilding
         Stone
     }
 
-    internal class Block : ICloneable
+    internal struct BlockStruct
     {
         internal Vector3i Position;
         internal BlockType Type;
+    }
 
+    internal static class Block
+    {
         internal static readonly int NumTexturesRow = 3;
         internal static readonly int NumTexturesColumn = 1;
 
@@ -75,30 +78,6 @@ namespace Minecraft.WorldBuilding
         };
 
         private static List<Tuple<BlockType, Vector2i>> TextureIndex = new List<Tuple<BlockType, Vector2i>>();
-
-        internal Block() { }
-
-        internal Block(Vector3i position, BlockType type)
-        {
-            this.Position = position;
-            this.Type = type;
-        }
-        
-        public object Clone()
-        {
-            return new Block(this.Position, this.Type);
-        }
-
-        internal Vector2 GetTexCoordsOffset()
-        {
-            Vector2 texCoords = new Vector2()
-            {
-                X = (float)TexCoordsOfBlockType(Type).Y / NumTexturesRow,
-                Y = (float)TexCoordsOfBlockType(Type).X + ((NumTexturesColumn - 1.0f) / NumTexturesColumn)
-            };
-
-            return texCoords;
-        }
 
         internal static Vector2 GetTexCoordsOffset(BlockType type)
         {

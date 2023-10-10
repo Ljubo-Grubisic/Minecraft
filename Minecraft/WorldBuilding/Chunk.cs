@@ -12,7 +12,7 @@ namespace Minecraft.WorldBuilding
         internal Vector2i Position { get; private set; }
 
         internal static readonly Vector3i Size = new Vector3i(16, 128, 16);
-        internal Block[,,] Blocks = new Block[Size.X, Size.Y, Size.Z];
+        internal BlockStruct[,,] Blocks = new BlockStruct[Size.X, Size.Y, Size.Z];
 
         internal Mesh Mesh { get; private set; }
 
@@ -27,7 +27,7 @@ namespace Minecraft.WorldBuilding
 
         internal void GenerateChunk()
         {
-            Block bufferBlock = new Block();
+            BlockStruct bufferBlock = new BlockStruct();
 
             int height = 32 + (Size.Y / 2);
 
@@ -46,7 +46,7 @@ namespace Minecraft.WorldBuilding
                             bufferBlock.Type = BlockType.Dirt;
                         else
                             bufferBlock.Type = BlockType.Stone;
-                        this.Blocks[x, y, z] = (Block)bufferBlock.Clone();
+                        this.Blocks[x, y, z] = bufferBlock;
                     }
                     for (int y = height + 1; y < Size.Y; y++)
                     {
@@ -54,7 +54,7 @@ namespace Minecraft.WorldBuilding
                         bufferBlock.Position.Y = y - (Size.Y / 2);
                         bufferBlock.Position.Z = z - (Size.Z / 2);
                         bufferBlock.Type = BlockType.Air;
-                        this.Blocks[x, y, z] = (Block)bufferBlock.Clone();
+                        this.Blocks[x, y, z] = bufferBlock;
                     }
                 }
             }
@@ -66,7 +66,7 @@ namespace Minecraft.WorldBuilding
             List<Vertex> vertices = new List<Vertex>();
             Vertex vertexBuffer = new Vertex();
 
-            foreach (Block block in Blocks)
+            foreach (BlockStruct block in Blocks)
             {
                 if (block.Type != BlockType.Air)
                 {
@@ -76,7 +76,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
+                            vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -86,7 +86,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 6];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
+                            vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type); ;
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -96,7 +96,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 12];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
+                            vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -106,7 +106,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i+ 18];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
+                            vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -116,7 +116,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 24];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
+                            vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -126,7 +126,7 @@ namespace Minecraft.WorldBuilding
                         {
                             vertexBuffer = Block.Vertices[i + 30];
                             vertexBuffer.Position += block.Position;
-                            vertexBuffer.TexCoords += block.GetTexCoordsOffset();
+                            vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
                             vertices.Add(vertexBuffer);
                         }
                     }
@@ -136,7 +136,7 @@ namespace Minecraft.WorldBuilding
             this.Mesh = new Mesh(vertices, new(), new());
         }
 
-        internal bool IsBlockSideCovered(Block block, Vector3i offset, List<Chunk> neighborChunks)
+        internal bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
         {
             Vector3i position = block.Position + offset + (Size / 2);
             if (!IsOutOfRange(position, Size))
