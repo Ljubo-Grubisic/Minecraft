@@ -92,6 +92,9 @@ namespace GameEngine.ModelLoading
 
         public void Dispose()
         {
+            GL.DeleteVertexArray(this.VAO);
+            GL.DeleteBuffer(this.VBO);
+            GL.DeleteBuffer(this.EBO);
             this.Vertices.Clear();
             this.Indices.Clear();
             this.Textures.Clear();

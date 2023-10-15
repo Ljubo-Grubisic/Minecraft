@@ -107,15 +107,18 @@ namespace Minecraft
             {
                 foreach (Chunk chunk in ChunkManager.ChunksLoaded)
                 {
-                    GL.BindVertexArray(chunk.Mesh.VAO);
+                    if (chunk.Mesh != null)
+                    {
+                        GL.BindVertexArray(chunk.Mesh.VAO);
 
-                    Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
+                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
 
-                    GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+                        GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
 
-                    GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
+                        GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
 
-                    GL.BindVertexArray(0);
+                        GL.BindVertexArray(0);
+                    }
                 }
             }
 
