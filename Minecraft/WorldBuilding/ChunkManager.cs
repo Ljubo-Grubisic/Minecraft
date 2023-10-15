@@ -1,7 +1,10 @@
-﻿using OpenTK.Graphics.ES11;
+﻿using Minecraft.Entitys;
+using Minecraft.System;
+using OpenTK.Graphics.ES11;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Windows.Markup;
 
 namespace Minecraft.WorldBuilding
@@ -24,7 +27,7 @@ namespace Minecraft.WorldBuilding
 
         internal static int SpawnChunkSize { get; set; } = 5;
 
-        internal static int TicksPerSecond { get; set; } = 10000;
+        internal static int TicksPerSecond { get; set; } = 12000;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static Thread ChunkManagingThread;
@@ -88,25 +91,9 @@ namespace Minecraft.WorldBuilding
                             }
                         }
                     }
-                    
-                    List<Vector2i> chunksWaitingToGenerate = ChunksWaitingToGenerate.ToList();
-                    for (int i = 0; i < chunksWaitingToGenerate.Count; i++)
-                    {
-                        bool IsChunkInRenderDistance = false;
-                        foreach (Vector2i position in ChunkPositionsAroundPlayer)
-                        {
-                            if (chunksWaitingToGenerate[i] == position)
-                            {
-                                IsChunkInRenderDistance = true;
-                                break;
-                            }
-                        }
-                        if (!IsChunkInRenderDistance)
-                        {
-                            chunksWaitingToGenerate.RemoveAt(i);
-                        }
-                    }
-                    ChunksWaitingToGenerate = chunksWaitingToGenerate.ToQueue();
+
+                    ChunksWaitingToGenerate = ChunksWaitingToGenerate.RemoveNotIn(ChunkPositionsAroundPlayer);
+                    ChunksWaitingToBake = ChunksWaitingToBake.RemoveNotIn(ChunkPositionsAroundPlayer);
 
                     switch (chunkLoadingSteps)
                     {
@@ -117,9 +104,7 @@ namespace Minecraft.WorldBuilding
                                 Chunk chunkGenerated = new Chunk(ChunksWaitingToGenerate.Dequeue());
                                 ChunksWaitingToBake.Enqueue(chunkGenerated);
 
-                                List<Chunk> neighbors = FindNeighbors(chunkGenerated, EnumerableExtensions.Add(ChunksLoaded, ChunksWaitingToBake.ToList()));
-
-                                foreach (Chunk neighbor in neighbors)
+                                foreach (Chunk neighbor in FindNeighbors(chunkGenerated, EnumerableExtensions.Add(ChunksLoaded, ChunksWaitingToBake.ToList())))
                                 {
                                     if (neighbor != null)
                                         ChunksWaitingToBake.Enqueue(neighbor);
@@ -145,10 +130,8 @@ namespace Minecraft.WorldBuilding
                                         if (!ChunksLoaded.Contains(chunkBaked))
                                             ChunksLoaded.Add(chunkBaked);
                                     }
-                                    Program.Minecraft.QueueOperation(() =>
-                                    {
-                                        BakeChunk(chunkBaked);
-                                    });
+
+                                    BakeChunk(chunkBaked);
                                 }
                             }
                             break;
@@ -159,22 +142,18 @@ namespace Minecraft.WorldBuilding
                             {
                                 Chunk chunkUnloaded = ChunksWaitingToUnload.Dequeue();
 
-                                Program.Minecraft.QueueOperation(() => {
-                                    chunkUnloaded.Unload();
-                                });
-
+                                chunkUnloaded.Unload();
+                                    
                                 lock (ChunksLoaded)
                                     ChunksLoaded.Remove(chunkUnloaded.Position);
 
-                                List<Chunk> neighbors = FindNeighbors(chunkUnloaded, EnumerableExtensions.Add(ChunksLoaded, ChunksWaitingToBake.ToList()));
-
-                                foreach (Chunk neighbor in neighbors)
+                                foreach (Chunk neighbor in FindNeighbors(chunkUnloaded, EnumerableExtensions.Add(ChunksLoaded, ChunksWaitingToBake.ToList())))
                                 {
                                     if (neighbor != null && !ChunksWaitingToUnload.Contains(neighbor.Position))
                                         ChunksWaitingToBake.Enqueue(neighbor);
                                 }
 
-                                if (garbageCollectorCounter == 10)
+                                if (garbageCollectorCounter == 100)
                                 {
                                     GC.Collect();
                                     garbageCollectorCounter = 0;
@@ -194,15 +173,20 @@ namespace Minecraft.WorldBuilding
         {
             List<Vector2i> ChunkPositions = new List<Vector2i>();
             Vector2 PlayerPositionInChunk = player.Position.Xz / Chunk.Size.Xz;
+            Vector2i ChunkPosition = new Vector2i();
 
             for (int x = 0; x < player.RenderDistance; x++)
             {
                 for (int z = 0; z < player.RenderDistance; z++)
                 {
-                    ChunkPositions.Add(new Vector2i((int)Math.Round(PlayerPositionInChunk.X - player.RenderDistance / 2 + x), (int)Math.Round(PlayerPositionInChunk.Y - player.RenderDistance / 2 + z)));
+                    ChunkPosition = new Vector2i((int)Math.Round(PlayerPositionInChunk.X - player.RenderDistance / 2 + x), (int)Math.Round(PlayerPositionInChunk.Y - player.RenderDistance / 2 + z));
+                    float distance = Vector2.Distance(PlayerPositionInChunk, ChunkPosition);
+                    if (distance < player.RenderDistance / 2.0f)
+                        ChunkPositions.Add(ChunkPosition);
                 }
             }
 
+             
             return ChunkPositions;
         }
 

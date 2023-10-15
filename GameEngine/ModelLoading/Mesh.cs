@@ -54,7 +54,7 @@ namespace GameEngine.ModelLoading
                     number = specularNumber.ToString();
                     specularNumber++;
                 }
-            
+
                 shader.SetInt("material." + name + number, i);
                 GL.BindTexture(TextureTarget.Texture2D, Textures[i].Handle);
             }
@@ -80,10 +80,10 @@ namespace GameEngine.ModelLoading
 
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.Position)));
-            
+
             GL.EnableVertexAttribArray(1);
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.Normal)));
-            
+
             GL.EnableVertexAttribArray(2);
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex), Marshal.OffsetOf<Vertex>(nameof(Vertex.TexCoords)));
 
@@ -91,7 +91,7 @@ namespace GameEngine.ModelLoading
         }
 
         public void Dispose()
-        {
+        { 
             GL.DeleteVertexArray(this.VAO);
             GL.DeleteBuffer(this.VBO);
             GL.DeleteBuffer(this.EBO);

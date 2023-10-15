@@ -1,7 +1,8 @@
 ﻿using Minecraft.WorldBuilding;
 using OpenTK.Mathematics;
+using System.Runtime.CompilerServices;
 
-namespace Minecraft
+namespace Minecraft.System
 {
     internal static class EnumerableExtensions
     {
@@ -132,5 +133,49 @@ namespace Minecraft
 
             return queue;
         }
+
+        internal static Queue<Vector2i> RemoveNotIn(this Queue<Vector2i> values, List<Vector2i> valuesNotToRemove)
+        {
+            List<Vector2i> chunksWaitingToGenerate = values.ToList();
+            for (int i = 0; i < chunksWaitingToGenerate.Count; i++)
+            {
+                bool IsChunkInRenderDistance = false;
+                foreach (Vector2i position in valuesNotToRemove)
+                {
+                    if (chunksWaitingToGenerate[i] == position)
+                    {
+                        IsChunkInRenderDistance = true;
+                        break;
+                    }
+                }
+                if (!IsChunkInRenderDistance)
+                {
+                    chunksWaitingToGenerate.RemoveAt(i);
+                }
+            }
+            return chunksWaitingToGenerate.ToQueue();
+        }
+        internal static Queue<Chunk> RemoveNotIn(this Queue<Chunk> values, List<Vector2i> valuesNotToRemove)
+        {
+            List<Chunk> chunksWaitingToGenerate = values.ToList();
+            for (int i = 0; i < chunksWaitingToGenerate.Count; i++)
+            {
+                bool IsChunkInRenderDistance = false;
+                foreach (Vector2i position in valuesNotToRemove)
+                {
+                    if (chunksWaitingToGenerate[i].Position == position)
+                    {
+                        IsChunkInRenderDistance = true;
+                        break;
+                    }
+                }
+                if (!IsChunkInRenderDistance)
+                {
+                    chunksWaitingToGenerate.RemoveAt(i);
+                }
+            }
+            return chunksWaitingToGenerate.ToQueue();
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using GameEngine.ModelLoading;
+using Minecraft.System;
 using OpenTK.Mathematics;
 
 namespace Minecraft.WorldBuilding
@@ -14,6 +15,8 @@ namespace Minecraft.WorldBuilding
 
         internal bool IsGenerated { get; private set; } = false;
         internal bool IsUnloaded { get; private set; } = false;
+        private bool isMeshGenerating { get; set; } = false;
+
 
         internal Chunk(Vector2i position)
         {
@@ -34,17 +37,15 @@ namespace Minecraft.WorldBuilding
                     for (int y = 0; y <= height; y++)
                     {
                         if (y == height)
-                            bufferBlock = BlockType.Grass;
+                            this.Blocks[x, y, z] = BlockType.Grass;
                         else if (y < height && y > height - 5)
-                            bufferBlock = BlockType.Dirt;
+                            this.Blocks[x, y, z] = BlockType.Dirt;
                         else
-                            bufferBlock = BlockType.Stone;
-                        this.Blocks[x, y, z] = bufferBlock;
+                            this.Blocks[x, y, z] = BlockType.Stone;
                     }
                     for (int y = height + 1; y < Size.Y; y++)
                     {
-                        bufferBlock = BlockType.Air;
-                        this.Blocks[x, y, z] = bufferBlock;
+                        this.Blocks[x, y, z] = BlockType.Air;
                     }
                 }
             }
@@ -53,92 +54,99 @@ namespace Minecraft.WorldBuilding
 
         internal void Bake(List<Chunk> neighborChunks)
         {
-            List<Vertex> vertices = new List<Vertex>();
-            Vertex vertexBuffer = new Vertex();
-
-            for (int x = 0; x < Size.X; x++)
+            ThreadPool.QueueUserWorkItem((sender) =>
             {
-                for (int z = 0; z < Size.Z; z++)
+                List<Vertex> vertices = new List<Vertex>();
+                Vertex vertexBuffer = new Vertex();
+
+                for (int x = 0; x < Size.X; x++)
                 {
-                    for (int y = 0; y < Size.Y; y++)
+                    for (int z = 0; z < Size.Z; z++)
                     {
-                        BlockStruct block = new BlockStruct();
-
-                        block.Type = Blocks[x, y, z];
-                        block.Position.X = x - (Size.X / 2);
-                        block.Position.Y = y - (Size.Y / 2);
-                        block.Position.Z = z - (Size.Z / 2);
-
-                        if (block.Type != BlockType.Air)
+                        for (int y = 0; y < Size.Y; y++)
                         {
-                            if (!IsBlockSideCovered(block, new Vector3i(0, 0, -1), neighborChunks))
+                            BlockStruct block = new BlockStruct();
+
+                            block.Type = Blocks[x, y, z];
+                            block.Position.X = x - (Size.X / 2);
+                            block.Position.Y = y - (Size.Y / 2);
+                            block.Position.Z = z - (Size.Z / 2);
+
+                            if (block.Type != BlockType.Air)
                             {
-                                for (int i = 0; i < 6; i++)
+                                if (!IsBlockSideCovered(block, new Vector3i(0, 0, -1), neighborChunks))
                                 {
-                                    vertexBuffer = Block.Vertices[i];
-                                    vertexBuffer.Position += block.Position;
-                                    vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
-                                    vertices.Add(vertexBuffer);
+                                    for (int i = 0; i < 6; i++)
+                                    {
+                                        vertexBuffer = Block.Vertices[i];
+                                        vertexBuffer.Position += block.Position;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
+                                        vertices.Add(vertexBuffer);
+                                    }
                                 }
-                            }
-                            if (!IsBlockSideCovered(block, new Vector3i(0, 0, 1), neighborChunks))
-                            {
-                                for (int i = 0; i < 6; i++)
+                                if (!IsBlockSideCovered(block, new Vector3i(0, 0, 1), neighborChunks))
                                 {
-                                    vertexBuffer = Block.Vertices[i + 6];
-                                    vertexBuffer.Position += block.Position;
-                                    vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type); ;
-                                    vertices.Add(vertexBuffer);
+                                    for (int i = 0; i < 6; i++)
+                                    {
+                                        vertexBuffer = Block.Vertices[i + 6];
+                                        vertexBuffer.Position += block.Position;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type); ;
+                                        vertices.Add(vertexBuffer);
+                                    }
                                 }
-                            }
-                            if (!IsBlockSideCovered(block, new Vector3i(-1, 0, 0), neighborChunks))
-                            {
-                                for (int i = 0; i < 6; i++)
+                                if (!IsBlockSideCovered(block, new Vector3i(-1, 0, 0), neighborChunks))
                                 {
-                                    vertexBuffer = Block.Vertices[i + 12];
-                                    vertexBuffer.Position += block.Position;
-                                    vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
-                                    vertices.Add(vertexBuffer);
+                                    for (int i = 0; i < 6; i++)
+                                    {
+                                        vertexBuffer = Block.Vertices[i + 12];
+                                        vertexBuffer.Position += block.Position;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
+                                        vertices.Add(vertexBuffer);
+                                    }
                                 }
-                            }
-                            if (!IsBlockSideCovered(block, new Vector3i(1, 0, 0), neighborChunks))
-                            {
-                                for (int i = 0; i < 6; i++)
+                                if (!IsBlockSideCovered(block, new Vector3i(1, 0, 0), neighborChunks))
                                 {
-                                    vertexBuffer = Block.Vertices[i + 18];
-                                    vertexBuffer.Position += block.Position;
-                                    vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
-                                    vertices.Add(vertexBuffer);
+                                    for (int i = 0; i < 6; i++)
+                                    {
+                                        vertexBuffer = Block.Vertices[i + 18];
+                                        vertexBuffer.Position += block.Position;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
+                                        vertices.Add(vertexBuffer);
+                                    }
                                 }
-                            }
-                            if (!IsBlockSideCovered(block, new Vector3i(0, -1, 0), neighborChunks))
-                            {
-                                for (int i = 0; i < 6; i++)
+                                if (!IsBlockSideCovered(block, new Vector3i(0, -1, 0), neighborChunks))
                                 {
-                                    vertexBuffer = Block.Vertices[i + 24];
-                                    vertexBuffer.Position += block.Position;
-                                    vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
-                                    vertices.Add(vertexBuffer);
+                                    for (int i = 0; i < 6; i++)
+                                    {
+                                        vertexBuffer = Block.Vertices[i + 24];
+                                        vertexBuffer.Position += block.Position;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
+                                        vertices.Add(vertexBuffer);
+                                    }
                                 }
-                            }
-                            if (!IsBlockSideCovered(block, new Vector3i(0, 1, 0), neighborChunks))
-                            {
-                                for (int i = 0; i < 6; i++)
+                                if (!IsBlockSideCovered(block, new Vector3i(0, 1, 0), neighborChunks))
                                 {
-                                    vertexBuffer = Block.Vertices[i + 30];
-                                    vertexBuffer.Position += block.Position;
-                                    vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
-                                    vertices.Add(vertexBuffer);
+                                    for (int i = 0; i < 6; i++)
+                                    {
+                                        vertexBuffer = Block.Vertices[i + 30];
+                                        vertexBuffer.Position += block.Position;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
+                                        vertices.Add(vertexBuffer);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (this.Mesh != null)
-                this.Mesh.Dispose();
-            this.Mesh = new Mesh(vertices, new(), new());
+                ActionManager.QueueAction(() => 
+                { 
+                    Mesh mesh = new Mesh(vertices, new(), new());
+                    if (this.Mesh != null)
+                        this.Mesh.Dispose();
+                    this.Mesh = mesh;
+                });
+            });
         }
 
         internal bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
@@ -204,7 +212,7 @@ namespace Minecraft.WorldBuilding
         internal void Unload()
         {
             if (Mesh != null)
-                this.Mesh.Dispose();
+                ActionManager.QueueAction(() => this.Mesh.Dispose());
             this.IsUnloaded = true;
         }
 

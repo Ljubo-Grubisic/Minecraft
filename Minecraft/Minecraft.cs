@@ -2,13 +2,14 @@
 using GameEngine.MainLooping;
 using GameEngine.Rendering;
 using GameEngine.Shadering;
+using Minecraft.Entitys;
 using Minecraft.WorldBuilding;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using GameEngine.ModelLoading;
+using Minecraft.System;
 
 namespace Minecraft
 {
@@ -19,29 +20,11 @@ namespace Minecraft
 
         private bool WireFrameMode = false;
 
-        private Queue<Action> Actions { get; set; } = new Queue<Action>();
-
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
 
         }
 
-        internal void QueueOperation(Action operation)
-        {
-            ThreadPool.QueueUserWorkItem((object state) =>
-            {
-                bool running = true;
-                while (running)
-                {
-                    lock (Actions)
-                    {
-                        Actions.Enqueue(operation);
-                        running = false;
-                        break;
-                    }
-                }
-            });
-        }
 
         protected override void OnInit()
         {
@@ -69,16 +52,8 @@ namespace Minecraft
         protected override void OnUpdate(FrameEventArgs args)
         {
             Console.WriteLine(Math.Round(1 / args.Time));
-            //Console.WriteLine(Camera.Position);
 
-            lock (Actions)
-            {
-                for (int i = 0; i < Actions.Count; i++)
-                {
-                    lock (ChunkManager.ChunksLoaded)
-                        Actions.Dequeue().Invoke();
-                }
-            }
+            ActionManager.InvokeActions();
 
             Player.Update(Camera);
 
