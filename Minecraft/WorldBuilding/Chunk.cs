@@ -15,8 +15,6 @@ namespace Minecraft.WorldBuilding
 
         internal bool IsGenerated { get; private set; } = false;
         internal bool IsUnloaded { get; private set; } = false;
-        private bool isMeshGenerating { get; set; } = false;
-
 
         internal Chunk(Vector2i position)
         {
@@ -139,8 +137,8 @@ namespace Minecraft.WorldBuilding
                     }
                 }
 
-                ActionManager.QueueAction(() => 
-                { 
+                ActionManager.QueueAction(() =>
+                {
                     Mesh mesh = new Mesh(vertices, new(), new());
                     if (this.Mesh != null)
                         this.Mesh.Dispose();
@@ -148,7 +146,6 @@ namespace Minecraft.WorldBuilding
                 });
             });
         }
-
         internal bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
         {
             Vector3i position = block.Position + offset + (Size / 2);

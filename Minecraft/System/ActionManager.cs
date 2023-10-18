@@ -12,7 +12,7 @@ namespace Minecraft.System
     /// </summary>
     internal static class ActionManager
     {
-        internal static Queue<Action> Actions = new Queue<Action>();
+        private static Queue<Action> Actions = new Queue<Action>();
 
         internal static void QueueAction(Action action)
         {

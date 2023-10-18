@@ -10,6 +10,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Minecraft.System;
+using System.Collections.Generic;
 
 namespace Minecraft
 {
@@ -29,13 +30,13 @@ namespace Minecraft
         protected override void OnInit()
         {
             Block.Init();
-            Player = new Player(PlayerMovementType.FreeCam);
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 64 };
             ChunkManager.Init();
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f, Speed = 100f };
+            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 200f };
         }
 
         protected override void OnLoadShaders()
@@ -51,7 +52,7 @@ namespace Minecraft
 
         protected override void OnUpdate(FrameEventArgs args)
         {
-            Console.WriteLine(Math.Round(1 / args.Time));
+            //Console.WriteLine(Math.Round(1 / args.Time));
 
             ActionManager.InvokeActions();
 
@@ -80,7 +81,7 @@ namespace Minecraft
 
             lock (ChunkManager.ChunksLoaded)
             {
-                foreach (Chunk chunk in ChunkManager.ChunksLoaded)
+                foreach (Chunk chunk in ChunkManager.ChunksLoaded.Values.ToList())
                 {
                     if (chunk.Mesh != null)
                     {
