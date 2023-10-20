@@ -13,8 +13,8 @@ namespace Minecraft.WorldBuilding
 
         internal Mesh Mesh { get; private set; }
 
-        internal bool IsGenerated { get; private set; } = false;
         internal bool IsUnloaded { get; private set; } = false;
+        internal bool IsBaking { get; set; } = false;
 
         internal Chunk(Vector2i position)
         {
@@ -47,11 +47,11 @@ namespace Minecraft.WorldBuilding
                     }
                 }
             }
-            this.IsGenerated = true;
         }
 
         internal void Bake(List<Chunk> neighborChunks)
         {
+            this.IsBaking = true;
             ThreadPool.QueueUserWorkItem((sender) =>
             {
                 List<Vertex> vertices = new List<Vertex>();
@@ -143,6 +143,7 @@ namespace Minecraft.WorldBuilding
                     if (this.Mesh != null)
                         this.Mesh.Dispose();
                     this.Mesh = mesh;
+                    this.IsBaking = false;
                 });
             });
         }
@@ -161,6 +162,7 @@ namespace Minecraft.WorldBuilding
                 if (offset.X == 1)
                 {
                     int index = neighborChunks.IndexOf(new Vector2i(1, 0) + this.Position);
+
                     if (index != -1)
                     {
                         if (neighborChunks[index].Blocks[Chunk.Size.X - 1, position.Y, position.Z] != BlockType.Air)

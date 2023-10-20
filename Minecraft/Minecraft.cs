@@ -30,7 +30,7 @@ namespace Minecraft
         protected override void OnInit()
         {
             Block.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 64 };
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
             ChunkManager.Init();
         }
 
