@@ -8,17 +8,21 @@ namespace Minecraft.WorldBuilding
 {
     internal enum BlockType : byte
     {
+        None = 0,
         Air,
         Dirt,
         Grass,
         Stone
     }
 
-    internal class Block : ICloneable
+    internal struct BlockStruct
     {
         internal Vector3i Position;
         internal BlockType Type;
+    }
 
+    internal static class Block
+    {
         internal static readonly int NumTexturesRow = 3;
         internal static readonly int NumTexturesColumn = 1;
 
@@ -74,31 +78,7 @@ namespace Minecraft.WorldBuilding
             new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(0.0f,  1.0f,  0.0f), TexCoords = new Vector2(0.0f, 1.0f) }
         };
 
-        private static List<Tuple<BlockType, Vector2i>> TextureIndex = new List<Tuple<BlockType, Vector2i>>();
-
-        internal Block() { }
-
-        internal Block(Vector3i position, BlockType type)
-        {
-            this.Position = position;
-            this.Type = type;
-        }
-        
-        public object Clone()
-        {
-            return new Block(this.Position, this.Type);
-        }
-
-        internal Vector2 GetTexCoordsOffset()
-        {
-            Vector2 texCoords = new Vector2()
-            {
-                X = (float)TexCoordsOfBlockType(Type).Y / NumTexturesRow,
-                Y = (float)TexCoordsOfBlockType(Type).X + ((NumTexturesColumn - 1.0f) / NumTexturesColumn)
-            };
-
-            return texCoords;
-        }
+        private static List<(BlockType, Vector2i)> TextureIndex = new List<(BlockType, Vector2i)>();
 
         internal static Vector2 GetTexCoordsOffset(BlockType type)
         {
@@ -113,7 +93,7 @@ namespace Minecraft.WorldBuilding
 
         internal static Vector2i TexCoordsOfBlockType(BlockType blockType)
         {
-            foreach (Tuple<BlockType, Vector2i> tuple in TextureIndex)
+            foreach ((BlockType, Vector2i) tuple in TextureIndex)
             {
                 if (tuple.Item1 == blockType)
                 {
@@ -128,9 +108,9 @@ namespace Minecraft.WorldBuilding
             Texture = Texture.LoadFromFile("Resources/Textures.png");
             CalculateTexCoords();
 
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Grass, new Vector2i(0, 1)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Stone, new Vector2i(0, 2)));
+            TextureIndex.Add((BlockType.Dirt, new Vector2i(0, 0)));
+            TextureIndex.Add((BlockType.Grass, new Vector2i(0, 1)));
+            TextureIndex.Add((BlockType.Stone, new Vector2i(0, 2)));
         }
 
         private static void CalculateTexCoords()

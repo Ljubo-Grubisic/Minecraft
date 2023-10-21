@@ -1,76 +1,56 @@
-﻿using OpenTK.Mathematics;
+﻿using Minecraft.Entitys;
+using Minecraft.System;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using GameEngine.Rendering;
+using System.Collections.Immutable;
 
 namespace Minecraft.WorldBuilding
 {
-    internal static class Extensions
+    internal enum ChunkLoadingSteps
     {
-        internal static bool Contains(this List<Chunk> values, Vector2i position)
-        {
-            foreach (Chunk value in values)
-            {
-                if (value != null)
-                {
-                    if (value.Position == position)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        internal static int IndexOf(this List<Chunk> values, Vector2i position)
-        {
-            for (int i = 0; i < values.Count; i++)
-            {
-                if (values[i] != null)
-                {
-                    if (values[i].Position == position)
-                    {
-                        return i;
-                    }
-                }
-            }
-            return -1;
-        }
+        None = 0,
+        Generate,
+        Bake,
+        Unload
     }
 
     internal static class ChunkManager
     {
-        internal static List<Chunk> Chunks = new List<Chunk>();
-        internal static Queue<Chunk> ChunksWaitingToLoad = new Queue<Chunk>();
+        internal static Dictionary<Vector2i, Chunk> ChunksLoaded = new Dictionary<Vector2i, Chunk>();
 
-        internal static int SpawnChunkSize { get; set; } = 5;
+        private static PriorityQueue<Vector2i, float> ChunksWaitingToGenerate = new PriorityQueue<Vector2i, float>();
+        private static Queue<Chunk> ChunksWaitingToBake = new Queue<Chunk>();
+        private static Queue<Chunk> ChunksWaitingToUnload = new Queue<Chunk>();
 
-        internal static int TicksPerSecond { get; set; } = 20;
+        private static Dictionary<Vector2i, Chunk> ChunksWaitingToBakeDictionary = new Dictionary<Vector2i, Chunk>();
+        private static Dictionary<Vector2i, Chunk> ChunksWaitingToUnloadDictionary = new Dictionary<Vector2i, Chunk>();
+
+        internal static int SpawnChunkSize { get; set; } = 1;
+
+        internal static float TicksPerSecond { get; set; } = 500f;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
-        private static Thread ChunkManagingThread;
-        private static Player Player;
-
-        internal static void Init(Player player)
+        private static readonly Func<KeyValuePair<Vector2i, Chunk>, bool> keyRemoverDictionaryByDistance = chunk =>
         {
-            Player = player;
+            return GetDistanceFromPlayer(chunk.Value.Position) > (Program.Minecraft.Player.RenderDistance / 2.0f);
+        };
+
+        private static Thread ChunkManagingThread;
+
+        internal static void Init()
+        {
             LoadSpawnChunks();
             ChunkManagingThread = new Thread(Loop) { IsBackground = true, Name = "ChunkManagingThread", Priority = ThreadPriority.AboveNormal };
             ChunkManagingThread.Start();
         }
 
-        internal static void Update(Player player)
-        {
-            Player = player;
-        }
-
-        internal static void Loop()
+        private static void Loop()
         {
             float totalTimeBeforeUpdate = 0f;
             float previousTimeElapsed = 0f;
             float deltaTime = 0f;
             float totalTimeElapsed = 0f;
-            int counter = 3;
+            ChunkLoadingSteps chunkLoadingSteps = ChunkLoadingSteps.None;
 
             while (ChunkManagingThread.IsAlive)
             {
@@ -82,61 +62,234 @@ namespace Minecraft.WorldBuilding
 
                 if (totalTimeBeforeUpdate >= TimeUntilUpdate)
                 {
+                    Console.WriteLine("ChunkManaginThread fps:" + (float)Math.Round(1 / totalTimeBeforeUpdate));
                     totalTimeBeforeUpdate = 0;
 
-                    if (counter == 3)
+                    ChunksWaitingToGenerate.Clear();
+
+                    ChunksWaitingToBakeDictionary = ChunksWaitingToBake.Distinct().ToDictionary(chunk => chunk.Position);
+                    ChunksWaitingToUnloadDictionary = ChunksWaitingToUnload.ToDictionary(chunk => chunk.Position);
+
+                    // Generate chunks that are close to the player
+                    List<Vector2i> ChunkPositionsAroundPlayer = ChunkPositionAroundPlayer(Program.Minecraft.Player);
+                    foreach (Vector2i position in ChunkPositionsAroundPlayer)
                     {
-
-
-                        counter = 0;
+                        if (!ChunkManagerContainsChunk(position))
+                        {
+                            ChunksWaitingToGenerate.Enqueue(position, GetDistanceFromPlayer(position));
+                        }
                     }
 
-                    counter++;
+                    // Unload chunks that are far from the player
+                    IEnumerable<KeyValuePair<Vector2i, Chunk>> chunksToUnload = ChunksLoaded.Where(keyRemoverDictionaryByDistance);
+                    foreach (KeyValuePair<Vector2i, Chunk> chunkToUnload in chunksToUnload)
+                    {
+                        if (!ChunksWaitingToUnload.Contains(chunkToUnload.Value))
+                        {
+                            ChunksWaitingToUnload.Enqueue(chunkToUnload.Value);
+                        }
+                    }
+
+                    switch (chunkLoadingSteps)
+                    {
+                        case ChunkLoadingSteps.Generate:
+
+                            if (ChunksWaitingToGenerate.Count != 0)
+                            {
+                                Chunk chunkGenerated = new Chunk(ChunksWaitingToGenerate.Dequeue());
+
+                                ChunksWaitingToBake.Enqueue(chunkGenerated);
+
+                                lock (ChunksLoaded)
+                                {
+                                    if (!ChunksLoaded.ContainsKey(chunkGenerated.Position))
+                                        ChunksLoaded.Add(chunkGenerated.Position, chunkGenerated);
+                                }
+
+                                foreach (Chunk neighbor in FindNeighbors(chunkGenerated))
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighbor.Position))
+                                    {
+                                        ChunksWaitingToBake.Enqueue(neighbor);
+                                    }
+                                }
+                            }
+                            break;
+
+                        case ChunkLoadingSteps.Bake:
+
+                            for (int i = 0; i < 2; i++)
+                            {
+                                if (ChunksWaitingToBake.Count != 0)
+                                {
+                                    Chunk chunkBaked;
+                                    do
+                                    {
+                                        chunkBaked = ChunksWaitingToBake.Dequeue();
+                                        chunkBaked.IsBaking = true;
+                                    }
+                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+
+                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                    {
+                                        BakeChunk(chunkBaked);
+                                    }
+                                }
+                            }
+                            break;
+
+                        case ChunkLoadingSteps.Unload:
+
+                            if (ChunksWaitingToUnload.Count != 0)
+                            {
+                                Chunk chunkUnloaded = ChunksWaitingToUnload.Dequeue();
+
+                                chunkUnloaded.Unload();
+
+                                lock (ChunksLoaded)
+                                    ChunksLoaded.Remove(chunkUnloaded.Position);
+
+                                foreach (Chunk neighbor in FindNeighbors(chunkUnloaded))
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighbor.Position))
+                                        ChunksWaitingToBake.Enqueue(neighbor);
+                                }
+                            }
+                            chunkLoadingSteps = ChunkLoadingSteps.None;
+                            break;
+                    }
+                    chunkLoadingSteps++;
                 }
             }
         }
 
-        internal static void LoadSpawnChunks()
+        private static List<Vector2i> ChunkPositionAroundPlayer(Player player)
+        {
+            List<Vector2i> ChunkPositions = new List<Vector2i>();
+            Vector2 PlayerPositionInChunk = player.Position.Xz / Chunk.Size.Xz;
+            Vector2i ChunkPosition = new Vector2i();
+
+            for (int x = 0; x < player.RenderDistance; x++)
+            {
+                for (int z = 0; z < player.RenderDistance; z++)
+                {
+                    ChunkPosition = new Vector2i((int)Math.Round(PlayerPositionInChunk.X - player.RenderDistance / 2 + x), (int)Math.Round(PlayerPositionInChunk.Y - player.RenderDistance / 2 + z));
+                    float distance = Vector2.Distance(PlayerPositionInChunk, ChunkPosition);
+                    if (distance < player.RenderDistance / 2.0f)
+                        ChunkPositions.Add(ChunkPosition);
+                }
+            }
+
+            return ChunkPositions;
+        }
+
+        private static float GetDistanceFromPlayer(Vector2i chunkPosition)
+        {
+            return Vector2.Distance(Program.Minecraft.Player.Position.Xz / Chunk.Size.Xz, chunkPosition);
+        }
+
+        private static bool ChunkManagerContainsChunk(Vector2i position)
+        {
+            if (ChunksLoaded.ContainsKey(position))
+                return true;
+            else if (ChunksWaitingToBakeDictionary.ContainsKey(position))
+                return true;
+            else if (ChunksWaitingToUnloadDictionary.ContainsKey(position))
+                return true;
+            else
+                return false;
+        }
+
+        private static void LoadSpawnChunks()
         {
             for (int i = 0; i < SpawnChunkSize; i++)
             {
                 for (int j = 0; j < SpawnChunkSize; j++)
                 {
-                    Chunks.Add(new Chunk(new Vector2i(i - (SpawnChunkSize / 2), j - (SpawnChunkSize / 2))));
+                    Vector2i position = new Vector2i(i - (SpawnChunkSize / 2), j - (SpawnChunkSize / 2));
+                    ChunksLoaded.Add(position, new Chunk(position));
                 }
             }
 
-            BakeChunks();
+            BakeAllChunks();
         }
 
-        internal static void BakeChunks() 
+        private static void BakeChunk(Chunk chunk)
         {
-            List<int> index = new List<int>();
+            chunk.Bake(FindNeighborsBaked(chunk));
+        }
+
+        private static void BakeAllChunks()
+        {
             List<Chunk?> neighbors = new List<Chunk?>();
-            for (int i = 0; i < Chunks.Count; i++)
+            for (int i = 0; i < ChunksLoaded.Count; i++)
             {
-                index.Clear();
-                neighbors.Clear();
+                neighbors = FindNeighbors(ChunksLoaded.Values.ToList()[i]);
 
-                index.Add(Chunks.IndexOf(new Vector2i(-1, 0) + Chunks[i].Position));
-                index.Add(Chunks.IndexOf(new Vector2i(1, 0) + Chunks[i].Position));
-                index.Add(Chunks.IndexOf(new Vector2i(0, -1) + Chunks[i].Position));
-                index.Add(Chunks.IndexOf(new Vector2i(0, 1) + Chunks[i].Position));
-
-                for (int j = 0; j < index.Count; j++)
-                {
-                    if (index[j] == -1)
-                    {
-                        neighbors.Add(null);
-                    }
-                    else
-                    {
-                        neighbors.Add(Chunks[index[j]]);
-                    }
-                }
-
-                Chunks[i].Bake(neighbors);
+                ChunksLoaded.Values.ToList()[i].Bake(neighbors);
             }
+        }
+
+        private static List<Chunk> FindNeighbors(Chunk chunk)
+        {
+            List<Chunk> chunksList = new List<Chunk>();
+            Chunk chunkBuffer;
+
+            if (ChunksLoaded.TryGetValue(new Vector2i(-1, 0) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+            if (ChunksLoaded.TryGetValue(new Vector2i(1, 0) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+            if (ChunksLoaded.TryGetValue(new Vector2i(0, -1) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+            if (ChunksLoaded.TryGetValue(new Vector2i(0, 1) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+
+            return chunksList;
+        }
+
+        private static List<Chunk> FindNeighborsBaked(Chunk chunk)
+        {
+            List<Chunk> chunksList = new List<Chunk>();
+            Chunk chunkBuffer;
+
+            if (ChunksLoaded.TryGetValue(new Vector2i(-1, 0) + chunk.Position, out chunkBuffer))
+            {
+                if (chunkBuffer.Mesh != null || chunkBuffer.IsBaking)
+                    chunksList.Add(chunkBuffer);
+            }
+            if (ChunksLoaded.TryGetValue(new Vector2i(1, 0) + chunk.Position, out chunkBuffer))
+            {
+                if (chunkBuffer.Mesh != null || chunkBuffer.IsBaking)
+                    chunksList.Add(chunkBuffer);
+            }
+            if (ChunksLoaded.TryGetValue(new Vector2i(0, -1) + chunk.Position, out chunkBuffer))
+            {
+                if (chunkBuffer.Mesh != null || chunkBuffer.IsBaking)
+                    chunksList.Add(chunkBuffer);
+            }
+            if (ChunksLoaded.TryGetValue(new Vector2i(0, 1) + chunk.Position, out chunkBuffer))
+            {
+                if (chunkBuffer.Mesh != null || chunkBuffer.IsBaking)
+                    chunksList.Add(chunkBuffer);
+            }
+
+            return chunksList;
+        }
+
+        private static List<Chunk> FindNeighbors(Chunk chunk, Dictionary<Vector2i, Chunk> chunks)
+        {
+            List<Chunk> chunksList = new List<Chunk>();
+            Chunk? chunkBuffer = null;
+            if (chunks.TryGetValue(new Vector2i(-1, 0) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+            if (chunks.TryGetValue(new Vector2i(1, 0) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+            if (chunks.TryGetValue(new Vector2i(0, -1) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+            if (chunks.TryGetValue(new Vector2i(0, 1) + chunk.Position, out chunkBuffer))
+                chunksList.Add(chunkBuffer);
+
+            return chunksList;
         }
     }
 }

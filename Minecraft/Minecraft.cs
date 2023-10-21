@@ -2,12 +2,15 @@
 using GameEngine.MainLooping;
 using GameEngine.Rendering;
 using GameEngine.Shadering;
+using Minecraft.Entitys;
 using Minecraft.WorldBuilding;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Minecraft.System;
+using System.Collections.Generic;
 
 namespace Minecraft
 {
@@ -20,20 +23,20 @@ namespace Minecraft
 
         public Minecraft(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
         {
-            
+
         }
+
 
         protected override void OnInit()
         {
             Block.Init();
-            Player = new Player(Camera, PlayerMovementType.FreeCam);
-            ChunkManager.Init(Player);
-            ChunkManager.BakeChunks();
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
+            ChunkManager.Init();
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 500.0f };
+            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 200f };
         }
 
         protected override void OnLoadShaders()
@@ -49,11 +52,11 @@ namespace Minecraft
 
         protected override void OnUpdate(FrameEventArgs args)
         {
-            Console.WriteLine(Math.Round(1 / args.Time));
-            //Console.WriteLine(Camera.Position);
+            //Console.WriteLine(Math.Round(1 / args.Time));
+
+            ActionManager.InvokeActions();
 
             Player.Update(Camera);
-            ChunkManager.Update(Player);
 
             if (KeyboardManager.OnKeyPressed(Keys.P))
             {
@@ -76,23 +79,29 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
-            foreach (Chunk chunk in ChunkManager.Chunks)
+            lock (ChunkManager.ChunksLoaded)
             {
-                GL.BindVertexArray(chunk.Mesh.VAO);
+                foreach (Chunk chunk in ChunkManager.ChunksLoaded.Values.ToList())
+                {
+                    if (chunk.Mesh != null)
+                    {
+                        GL.BindVertexArray(chunk.Mesh.VAO);
 
-                Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
+                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
 
-                GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+                        GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
 
-                GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
+                        GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
 
-                GL.BindVertexArray(0);
+                        GL.BindVertexArray(0);
+                    }
+                }
             }
+
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)
         {
-            Console.WriteLine("Resized");
         }
     }
 }
