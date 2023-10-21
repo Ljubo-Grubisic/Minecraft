@@ -8,8 +8,10 @@ namespace Minecraft.WorldBuilding
     {
         internal Vector2i Position { get; private set; }
 
-        internal static readonly Vector3i Size = new Vector3i(16, 128, 16);
-        internal BlockType[,,] Blocks = new BlockType[Size.X, Size.Y, Size.Z];
+        internal static readonly Vector3i Size = new Vector3i(16, 256, 16);
+
+        private Dictionary<Vector3i, BlockType> Blocks = new Dictionary<Vector3i, BlockType>();
+        private Dictionary<int, BlockType> Layers = new Dictionary<int, BlockType>();
 
         internal Mesh Mesh { get; private set; }
 
@@ -22,31 +24,27 @@ namespace Minecraft.WorldBuilding
             GenerateChunk();
         }
 
-        internal void GenerateChunk()
+        #region Public
+        internal BlockType GetBlockType(Vector3i position)
         {
-            BlockType bufferBlock = new BlockType();
+            BlockType blockType;
+            if (Blocks.TryGetValue(position, out blockType))
+                return blockType;
+            else if (Layers.TryGetValue(position.Y, out blockType))
+                return blockType;
+            else
+                throw new IndexOutOfRangeException("Index out of range");
+        }
 
-            int height = 32 + (Size.Y / 2);
-
-            for (int x = 0; x < Size.X; x++)
+        internal void Unload()
+        {
+            if (Mesh != null)
             {
-                for (int z = 0; z < Size.Z; z++)
-                {
-                    for (int y = 0; y <= height; y++)
-                    {
-                        if (y == height)
-                            this.Blocks[x, y, z] = BlockType.Grass;
-                        else if (y < height && y > height - 5)
-                            this.Blocks[x, y, z] = BlockType.Dirt;
-                        else
-                            this.Blocks[x, y, z] = BlockType.Stone;
-                    }
-                    for (int y = height + 1; y < Size.Y; y++)
-                    {
-                        this.Blocks[x, y, z] = BlockType.Air;
-                    }
-                }
+                this.Blocks.Clear();
+                this.Layers.Clear();
+                ActionManager.QueueAction(() => this.Mesh.Dispose());
             }
+            this.IsUnloaded = true;
         }
 
         internal void Bake(List<Chunk> neighborChunks)
@@ -56,6 +54,7 @@ namespace Minecraft.WorldBuilding
             {
                 List<Vertex> vertices = new List<Vertex>();
                 Vertex vertexBuffer = new Vertex();
+                Vector3i index = new Vector3i();
 
                 for (int x = 0; x < Size.X; x++)
                 {
@@ -63,9 +62,11 @@ namespace Minecraft.WorldBuilding
                     {
                         for (int y = 0; y < Size.Y; y++)
                         {
+                            index.X = x; index.Y = y; index.Z = z;
                             BlockStruct block = new BlockStruct();
 
-                            block.Type = Blocks[x, y, z];
+                            block.Type = this.GetBlockType(index);
+
                             block.Position.X = x - (Size.X / 2);
                             block.Position.Y = y - (Size.Y / 2);
                             block.Position.Z = z - (Size.Z / 2);
@@ -147,12 +148,44 @@ namespace Minecraft.WorldBuilding
                 });
             });
         }
-        internal bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
+        #endregion
+
+        #region Private
+        private void GenerateChunk()
+        {
+            int height = 0 + (Size.Y / 2);
+
+            for (int x = 0; x < Size.X; x++)
+            {
+                for (int z = 0; z < Size.Z; z++)
+                {
+                    for (int y = 0; y <= height; y++)
+                    {
+                        if (y == height)
+                            this.Blocks.Add(new Vector3i(x, y, z), BlockType.Grass);
+                        else if (y < height && y > height - 5)
+                            this.Blocks.Add(new Vector3i(x, y, z), BlockType.Dirt);
+                        else
+                            this.Blocks.Add(new Vector3i(x, y, z), BlockType.Stone);
+                    }
+                    for (int y = height + 1; y < Size.Y; y++)
+                    {
+                        this.Blocks.Add(new Vector3i(x, y, z), BlockType.Air);
+                    }
+                }
+            }
+
+            OptimizeBlocksToLayers();
+        }
+
+        private bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
         {
             Vector3i position = block.Position + offset + (Size / 2);
+            BlockType blockType = new BlockType();
+
             if (!IsOutOfRange(position, Size))
             {
-                if (Blocks[position.X, position.Y, position.Z] != BlockType.Air)
+                if (this.GetBlockType(position) != BlockType.Air)
                 {
                     return true;
                 }
@@ -165,7 +198,7 @@ namespace Minecraft.WorldBuilding
 
                     if (index != -1)
                     {
-                        if (neighborChunks[index].Blocks[Chunk.Size.X - 1, position.Y, position.Z] != BlockType.Air)
+                        if (neighborChunks[index].GetBlockType(new Vector3i(Chunk.Size.X - 1, position.Y, position.Z)) != BlockType.Air)
                         {
                             return true;
                         }
@@ -176,7 +209,7 @@ namespace Minecraft.WorldBuilding
                     int index = neighborChunks.IndexOf(new Vector2i(-1, 0) + this.Position);
                     if (index != -1)
                     {
-                        if (neighborChunks[index].Blocks[0, position.Y, position.Z] != BlockType.Air)
+                        if (neighborChunks[index].GetBlockType(new Vector3i(0, position.Y, position.Z)) != BlockType.Air)
                         {
                             return true;
                         }
@@ -187,7 +220,7 @@ namespace Minecraft.WorldBuilding
                     int index = neighborChunks.IndexOf(new Vector2i(0, 1) + this.Position);
                     if (index != -1)
                     {
-                        if (neighborChunks[index].Blocks[position.X, position.Y, Chunk.Size.Z - 1] != BlockType.Air)
+                        if (neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, Chunk.Size.Z - 1)) != BlockType.Air)
                         {
                             return true;
                         }
@@ -198,7 +231,7 @@ namespace Minecraft.WorldBuilding
                     int index = neighborChunks.IndexOf(new Vector2i(0, -1) + this.Position);
                     if (index != -1)
                     {
-                        if (neighborChunks[index].Blocks[position.X, position.Y, 0] != BlockType.Air)
+                        if (neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, 0)) != BlockType.Air)
                         {
                             return true;
                         }
@@ -208,11 +241,50 @@ namespace Minecraft.WorldBuilding
             return false;
         }
 
-        internal void Unload()
+        private void OptimizeBlocksToLayers()
         {
-            if (Mesh != null)
-                ActionManager.QueueAction(() => this.Mesh.Dispose());
-            this.IsUnloaded = true;
+            Vector3i index = new Vector3i();
+            BlockType blockType = new BlockType();
+            for (int y = 0; y < Size.Y; y++)
+            {
+                bool firstBlock = true;
+                bool isLayerSame = true;
+
+                for (int x = 0; x < Size.X; x++)
+                {
+                    for (int z = 0; z < Size.Z; z++)
+                    {
+                        index.X = x; index.Y = y; index.Z = z;
+                        if (firstBlock)
+                        {
+                            blockType = Blocks[index];
+                            firstBlock = false;
+                        }
+                        if (blockType != Blocks[index])
+                        {
+                            isLayerSame = false;
+                        }
+                    }
+                }
+
+                if (isLayerSame)
+                {
+                    this.Layers.Add(y, blockType);
+
+                    for (int x = 0; x < Size.X; x++)
+                    {
+                        for (int z = 0; z < Size.Z; z++)
+                        {
+                            index.X = x; index.Y = y; index.Z = z;
+
+                            this.Blocks.Remove(index);
+                        }
+                    }
+                }
+            }
+
+            this.Blocks.TrimExcess();
+            this.Layers.TrimExcess();
         }
 
         private static bool IsOutOfRange(Vector3i position, Vector3i size)
@@ -230,5 +302,6 @@ namespace Minecraft.WorldBuilding
                 return false;
             }
         }
+        #endregion
     }
 }

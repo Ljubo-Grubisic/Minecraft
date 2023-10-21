@@ -8,6 +8,7 @@ namespace Minecraft.WorldBuilding
 {
     internal enum BlockType : byte
     {
+        None = 0,
         Air,
         Dirt,
         Grass,
@@ -77,7 +78,7 @@ namespace Minecraft.WorldBuilding
             new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(0.0f,  1.0f,  0.0f), TexCoords = new Vector2(0.0f, 1.0f) }
         };
 
-        private static List<Tuple<BlockType, Vector2i>> TextureIndex = new List<Tuple<BlockType, Vector2i>>();
+        private static List<(BlockType, Vector2i)> TextureIndex = new List<(BlockType, Vector2i)>();
 
         internal static Vector2 GetTexCoordsOffset(BlockType type)
         {
@@ -92,7 +93,7 @@ namespace Minecraft.WorldBuilding
 
         internal static Vector2i TexCoordsOfBlockType(BlockType blockType)
         {
-            foreach (Tuple<BlockType, Vector2i> tuple in TextureIndex)
+            foreach ((BlockType, Vector2i) tuple in TextureIndex)
             {
                 if (tuple.Item1 == blockType)
                 {
@@ -107,9 +108,9 @@ namespace Minecraft.WorldBuilding
             Texture = Texture.LoadFromFile("Resources/Textures.png");
             CalculateTexCoords();
 
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Dirt, new Vector2i(0, 0)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Grass, new Vector2i(0, 1)));
-            TextureIndex.Add(new Tuple<BlockType, Vector2i>(BlockType.Stone, new Vector2i(0, 2)));
+            TextureIndex.Add((BlockType.Dirt, new Vector2i(0, 0)));
+            TextureIndex.Add((BlockType.Grass, new Vector2i(0, 1)));
+            TextureIndex.Add((BlockType.Stone, new Vector2i(0, 2)));
         }
 
         private static void CalculateTexCoords()
