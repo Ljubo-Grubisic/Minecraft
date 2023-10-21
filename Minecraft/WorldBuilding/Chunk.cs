@@ -21,7 +21,7 @@ namespace Minecraft.WorldBuilding
         internal Chunk(Vector2i position)
         {
             this.Position = position;
-            GenerateChunk();
+            Generate();
         }
 
         #region Public
@@ -38,13 +38,11 @@ namespace Minecraft.WorldBuilding
 
         internal void Unload()
         {
+            this.IsUnloaded = true;
             if (Mesh != null)
             {
-                this.Blocks.Clear();
-                this.Layers.Clear();
                 ActionManager.QueueAction(() => this.Mesh.Dispose());
             }
-            this.IsUnloaded = true;
         }
 
         internal void Bake(List<Chunk> neighborChunks)
@@ -151,7 +149,7 @@ namespace Minecraft.WorldBuilding
         #endregion
 
         #region Private
-        private void GenerateChunk()
+        private void Generate()
         {
             int height = 0 + (Size.Y / 2);
 
@@ -176,6 +174,54 @@ namespace Minecraft.WorldBuilding
             }
 
             OptimizeBlocksToLayers();
+        }
+
+        private void OptimizeBlocksToLayers()
+        {
+            Vector3i index = new Vector3i();
+            BlockType blockType = new BlockType();
+            for (int y = 0; y < Size.Y; y++)
+            {
+                bool firstBlock = true;
+                bool isLayerSame = true;
+
+                for (int x = 0; x < Size.X; x++)
+                {
+                    for (int z = 0; z < Size.Z; z++)
+                    {
+                        index.X = x; index.Y = y; index.Z = z;
+                        if (firstBlock)
+                        {
+                            blockType = Blocks[index];
+                            firstBlock = false;
+                        }
+                        if (blockType != Blocks[index])
+                        {
+                            isLayerSame = false;
+                        }
+                    }
+                }
+
+                if (isLayerSame)
+                {
+                    this.Layers.Add(y, blockType);
+
+                    for (int x = 0; x < Size.X; x++)
+                    {
+                        for (int z = 0; z < Size.Z; z++)
+                        {
+                            index.X = x; index.Y = y; index.Z = z;
+
+                            this.Blocks.Remove(index);
+                        }
+                    }
+                }
+            }
+
+            this.Blocks.TrimExcess();
+            this.Layers.TrimExcess();
+            if (Layers.Count == 0)
+                Console.WriteLine("molim");
         }
 
         private bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
@@ -239,52 +285,6 @@ namespace Minecraft.WorldBuilding
                 }
             }
             return false;
-        }
-
-        private void OptimizeBlocksToLayers()
-        {
-            Vector3i index = new Vector3i();
-            BlockType blockType = new BlockType();
-            for (int y = 0; y < Size.Y; y++)
-            {
-                bool firstBlock = true;
-                bool isLayerSame = true;
-
-                for (int x = 0; x < Size.X; x++)
-                {
-                    for (int z = 0; z < Size.Z; z++)
-                    {
-                        index.X = x; index.Y = y; index.Z = z;
-                        if (firstBlock)
-                        {
-                            blockType = Blocks[index];
-                            firstBlock = false;
-                        }
-                        if (blockType != Blocks[index])
-                        {
-                            isLayerSame = false;
-                        }
-                    }
-                }
-
-                if (isLayerSame)
-                {
-                    this.Layers.Add(y, blockType);
-
-                    for (int x = 0; x < Size.X; x++)
-                    {
-                        for (int z = 0; z < Size.Z; z++)
-                        {
-                            index.X = x; index.Y = y; index.Z = z;
-
-                            this.Blocks.Remove(index);
-                        }
-                    }
-                }
-            }
-
-            this.Blocks.TrimExcess();
-            this.Layers.TrimExcess();
         }
 
         private static bool IsOutOfRange(Vector3i position, Vector3i size)
