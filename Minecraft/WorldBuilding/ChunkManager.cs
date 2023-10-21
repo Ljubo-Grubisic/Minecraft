@@ -10,7 +10,6 @@ namespace Minecraft.WorldBuilding
     {
         None = 0,
         Generate,
-        Process,
         Bake,
         Unload
     }
@@ -20,11 +19,9 @@ namespace Minecraft.WorldBuilding
         internal static Dictionary<Vector2i, Chunk> ChunksLoaded = new Dictionary<Vector2i, Chunk>();
 
         private static PriorityQueue<Vector2i, float> ChunksWaitingToGenerate = new PriorityQueue<Vector2i, float>();
-        private static Queue<Chunk> ChunksWaitingToProcess = new Queue<Chunk>();
         private static Queue<Chunk> ChunksWaitingToBake = new Queue<Chunk>();
         private static Queue<Chunk> ChunksWaitingToUnload = new Queue<Chunk>();
 
-        private static Dictionary<Vector2i, Chunk> ChunksWaitingToProcessDictionary = new Dictionary<Vector2i, Chunk>();
         private static Dictionary<Vector2i, Chunk> ChunksWaitingToBakeDictionary = new Dictionary<Vector2i, Chunk>();
         private static Dictionary<Vector2i, Chunk> ChunksWaitingToUnloadDictionary = new Dictionary<Vector2i, Chunk>();
 
@@ -70,7 +67,6 @@ namespace Minecraft.WorldBuilding
 
                     ChunksWaitingToGenerate.Clear();
 
-                    ChunksWaitingToProcessDictionary = ChunksWaitingToProcess.ToDictionary(chunk => chunk.Position);
                     ChunksWaitingToBakeDictionary = ChunksWaitingToBake.Distinct().ToDictionary(chunk => chunk.Position);
                     ChunksWaitingToUnloadDictionary = ChunksWaitingToUnload.ToDictionary(chunk => chunk.Position);
 
@@ -100,46 +96,17 @@ namespace Minecraft.WorldBuilding
 
                             if (ChunksWaitingToGenerate.Count != 0)
                             {
-                                ThreadPool.QueueUserWorkItem((sender) =>
-                                {
-                                    if (ChunksWaitingToGenerate.Count != 0)
-                                    {
-                                        Chunk chunkWaitingToProcess;
-                                        do
-                                        {
-                                            chunkWaitingToProcess = new Chunk(ChunksWaitingToGenerate.Dequeue());
-                                        }
-                                        while (ChunksWaitingToProcessDictionary.ContainsKey(ChunksWaitingToGenerate.Peek()) && ChunksWaitingToGenerate.Count != 0);
+                                Chunk chunkGenerated = new Chunk(ChunksWaitingToGenerate.Dequeue());
 
-                                        if (!ChunksWaitingToProcessDictionary.ContainsKey(ChunksWaitingToGenerate.Peek()))
-                                        {
-                                            lock (ChunksWaitingToProcess)
-                                            {
-                                                ChunksWaitingToProcess.Enqueue(chunkWaitingToProcess);
-                                            }
-                                        }    
-                                    }
-                                });
-
-                            }
-                            break;
-                        case ChunkLoadingSteps.Process:
-
-                            if (ChunksWaitingToProcess.Count != 0)
-                            {
-                                Chunk chunkToProccess;
-                                lock (ChunksWaitingToProcess)
-                                    chunkToProccess = ChunksWaitingToProcess.Dequeue();
-
-                                ChunksWaitingToBake.Enqueue(chunkToProccess);
+                                ChunksWaitingToBake.Enqueue(chunkGenerated);
 
                                 lock (ChunksLoaded)
                                 {
-                                    if (!ChunksLoaded.ContainsKey(chunkToProccess.Position))
-                                        ChunksLoaded.Add(chunkToProccess.Position, chunkToProccess);
+                                    if (!ChunksLoaded.ContainsKey(chunkGenerated.Position))
+                                        ChunksLoaded.Add(chunkGenerated.Position, chunkGenerated);
                                 }
 
-                                foreach (Chunk neighbor in FindNeighbors(chunkToProccess))
+                                foreach (Chunk neighbor in FindNeighbors(chunkGenerated))
                                 {
                                     if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighbor.Position))
                                     {
@@ -151,22 +118,19 @@ namespace Minecraft.WorldBuilding
 
                         case ChunkLoadingSteps.Bake:
 
-                            for (int i = 0; i < 10; i++)
+                            if (ChunksWaitingToBake.Count != 0)
                             {
-                                if (ChunksWaitingToBake.Count != 0)
+                                Chunk chunkBaked;
+                                do
                                 {
-                                    Chunk chunkBaked;
-                                    do
-                                    {
-                                        chunkBaked = ChunksWaitingToBake.Dequeue();
-                                        chunkBaked.IsBaking = true;
-                                    }
-                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+                                    chunkBaked = ChunksWaitingToBake.Dequeue();
+                                    chunkBaked.IsBaking = true;
+                                }
+                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
-                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
-                                    {
-                                        BakeChunk(chunkBaked);
-                                    }
+                                if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                {
+                                    BakeChunk(chunkBaked);
                                 }
                             }
                             break;
@@ -228,8 +192,6 @@ namespace Minecraft.WorldBuilding
             else if (ChunksWaitingToBakeDictionary.ContainsKey(position))
                 return true;
             else if (ChunksWaitingToUnloadDictionary.ContainsKey(position))
-                return true;
-            else if (ChunksWaitingToProcessDictionary.ContainsKey(position))
                 return true;
             else
                 return false;
