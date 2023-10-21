@@ -5,14 +5,13 @@ Cilj ovog projekta je napraviti game engine i osnove minecrafta.
 Neke od stvari koje ću pokušati rekreairati je loadanje, unloadanje i
 generiranje chunkove. Možda još implementiram lighting system.
 
-
 Final thesis of high school
 
 The goal of this project is to make a game engine and the basics of minecraft.
 Some of the things I will try to recreate is loading, unloading and
-generating chunks. I might still implement the lighting system.
+generating chunks. I might implement the lighting system.
 
-Some picture of how development is going:
+Some pictures of how development is going:
 
 ![image](https://github.com/Ljubo-Grubisic/Minecraft/assets/114671335/f55c3e1c-e0f2-4a40-a38b-54ebdea6e828)
 ![image](https://github.com/Ljubo-Grubisic/Minecraft/assets/114671335/243a2013-15f1-413a-9f0a-a04abe622c34)
