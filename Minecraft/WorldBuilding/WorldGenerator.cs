@@ -22,12 +22,13 @@ namespace Minecraft.WorldBuilding
         {
             Noise = new FastNoiseLite(Seed);
             Noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+            Noise.SetFrequency(0.0038f);
         }
 
         internal static Dictionary<Vector3i, BlockType> GenerateChunk(Chunk chunk)
         {
-            int xChunk = chunk.Position.X * Chunk.Size.X;
-            int yChunk = chunk.Position.Y * Chunk.Size.Z;
+            int xChunk = chunk.Position.X * Chunk.Size.Z - (Chunk.Size.Z / 2);
+            int yChunk = chunk.Position.Y * Chunk.Size.X - (Chunk.Size.X / 2);
             int[,] height = ConvertNoiseToHeight(GetNoiseData(xChunk, yChunk, Chunk.Size.X), Chunk.Size.X);
             Dictionary<Vector3i, BlockType> blocks = new Dictionary<Vector3i, BlockType>();
             
@@ -51,36 +52,6 @@ namespace Minecraft.WorldBuilding
                 }
             }
 
-            //int height = 125;
-            //if (chunk.Position.X % 2 == 0)
-            //    height += 3;
-            //else 
-            //    height -= 2;
-            //if (chunk.Position.Y % 2 == 0)
-            //    height += 3;
-            //else
-            //    height -= 2;
-            //
-            //for (int x = 0; x < Chunk.Size.X; x++)
-            //{
-            //    for (int z = 0; z < Chunk.Size.Z; z++)
-            //    {
-            //        for (int y = 0; y <= height; y++)
-            //        {   
-            //            if (y == height)
-            //                blocks.Add(new Vector3i(x, y, z), BlockType.Grass);
-            //            else if (y < height && y > height - 5)
-            //                blocks.Add(new Vector3i(x, y, z), BlockType.Dirt);
-            //            else
-            //                blocks.Add(new Vector3i(x, y, z), BlockType.Stone);
-            //        }
-            //        for (int y = height + 1; y < Chunk.Size.Y; y++)
-            //        {
-            //            blocks.Add(new Vector3i(x, y, z), BlockType.Air);
-            //        }
-            //    }
-            //}
-
             return blocks;
         }
 
@@ -91,7 +62,7 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < length; j++)
                 {
-                    data[i, j] = Noise.GetNoise(x + i, y, + j);
+                    data[i, j] = Noise.GetNoise(x + i, y + j);
                 }
             }
             return data;
@@ -104,7 +75,7 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < length; j++)
                 {
-                    data[i, j] = (int)(noise[i, j] * (Chunk.Size.Y / 2)) + (Chunk.Size.Y / 2);
+                    data[i, j] = (int)((noise[i, j] + 1) * (Chunk.Size.Y / 2));
                 }
             }
             return data;

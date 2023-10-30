@@ -213,7 +213,7 @@ namespace Minecraft.WorldBuilding
 
         private static void BakeChunk(Chunk chunk)
         {
-            chunk.Bake(FindNeighborsBaked(chunk));
+            chunk.Bake(FindNeighbors(chunk));
         }
 
         private static void BakeAllChunks()
