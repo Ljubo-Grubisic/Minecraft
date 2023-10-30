@@ -15,7 +15,7 @@ namespace Minecraft.WorldBuilding
 {
     internal static class WorldGenerator
     {
-        internal static int Seed { get; private set; } = 00000;
+        internal static int Seed { get; private set; } = 0;
         private static FastNoiseLite Noise;
 
         internal static void Init()
@@ -29,6 +29,7 @@ namespace Minecraft.WorldBuilding
         {
             int xChunk = chunk.Position.X * Chunk.Size.Z - (Chunk.Size.Z / 2);
             int yChunk = chunk.Position.Y * Chunk.Size.X - (Chunk.Size.X / 2);
+            int waterLevel = 86;
             int[,] height = ConvertNoiseToHeight(GetNoiseData(xChunk, yChunk, Chunk.Size.X), Chunk.Size.X);
             Dictionary<Vector3i, BlockType> blocks = new Dictionary<Vector3i, BlockType>();
             
@@ -47,7 +48,10 @@ namespace Minecraft.WorldBuilding
                     }
                     for (int y = height[x, z] + 1; y < Chunk.Size.Y; y++)
                     {
-                        blocks.Add(new Vector3i(x, y, z), BlockType.Air);
+                        if (y < waterLevel)
+                            blocks.Add(new Vector3i(x, y, z), BlockType.Water);
+                        else
+                            blocks.Add(new Vector3i(x, y, z), BlockType.Air);
                     }
                 }
             }
