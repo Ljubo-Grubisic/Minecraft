@@ -90,7 +90,7 @@ namespace Minecraft.WorldBuilding
                                     {
                                         vertexBuffer = Block.Vertices[i + 6];
                                         vertexBuffer.Position += block.Position;
-                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type); ;
+                                        vertexBuffer.TexCoords += Block.GetTexCoordsOffset(block.Type);
                                         vertices.Add(vertexBuffer);
                                     }
                                 }

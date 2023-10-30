@@ -12,7 +12,18 @@ namespace Minecraft.WorldBuilding
         Air,
         Dirt,
         Grass,
-        Stone
+        Stone,
+        Sand,
+        Water,
+        OakLeaves,
+        Oak,
+        Cactus,
+    }
+
+    internal enum BlockVisibilty
+    {
+        Opaque,
+        Transparent
     }
 
     internal struct BlockStruct
@@ -23,8 +34,8 @@ namespace Minecraft.WorldBuilding
 
     internal static class Block
     {
-        internal static readonly int NumTexturesRow = 3;
-        internal static readonly int NumTexturesColumn = 1;
+        internal static readonly int NumTexturesRow = 5;
+        internal static readonly int NumTexturesColumn = 3;
 
         internal static Texture Texture { get; private set; }
         internal static List<Vertex> Vertices = new List<Vertex>()
@@ -84,14 +95,14 @@ namespace Minecraft.WorldBuilding
         {
             Vector2 texCoords = new Vector2()
             {
-                X = (float)TexCoordsOfBlockType(type).Y / NumTexturesRow,
-                Y = (float)TexCoordsOfBlockType(type).X + ((NumTexturesColumn - 1.0f) / NumTexturesColumn)
+                X = (float)TexCoordsIndexOfBlockType(type).Y / NumTexturesRow,
+                Y = -(float)TexCoordsIndexOfBlockType(type).X / NumTexturesColumn
             };
 
             return texCoords;
         }
 
-        internal static Vector2i TexCoordsOfBlockType(BlockType blockType)
+        private static Vector2i TexCoordsIndexOfBlockType(BlockType blockType)
         {
             foreach ((BlockType, Vector2i) tuple in TextureIndex)
             {
@@ -111,6 +122,12 @@ namespace Minecraft.WorldBuilding
             TextureIndex.Add((BlockType.Dirt, new Vector2i(0, 0)));
             TextureIndex.Add((BlockType.Grass, new Vector2i(0, 1)));
             TextureIndex.Add((BlockType.Stone, new Vector2i(0, 2)));
+            TextureIndex.Add((BlockType.Sand, new Vector2i(0, 3)));
+            TextureIndex.Add((BlockType.Water, new Vector2i(0, 4)));
+
+            TextureIndex.Add((BlockType.OakLeaves, new Vector2i(1, 0)));
+            TextureIndex.Add((BlockType.Oak, new Vector2i(1, 2)));
+            TextureIndex.Add((BlockType.Cactus, new Vector2i(1, 1)));
         }
 
         private static void CalculateTexCoords()
@@ -120,13 +137,13 @@ namespace Minecraft.WorldBuilding
             // z-
             {
                 // 0.0, 0.0 -> 3/4, 2/3
-                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 0;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 5;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 0.0 -> 2/4, 2/3
-                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 1;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 0.0, 1.0 -> 3/4, 1
@@ -154,11 +171,11 @@ namespace Minecraft.WorldBuilding
                 indicies = 10;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 0.0, 1.0 -> 2/4, 1/3
-                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 7;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 1.0 -> 3/4, 1/3
-                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 6;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 11;
@@ -168,23 +185,23 @@ namespace Minecraft.WorldBuilding
             // x-
             {
                 // 0.0, 0.0 -> 2/4, 2/3
-                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 16;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 0.0 -> 2/4, 1/3
-                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 14;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 15;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 0.0, 1.0 -> 1/4, 2/3
-                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 12;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 17;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 1.0 -> 1/4, 1/3
-                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 13;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
             }
@@ -192,23 +209,23 @@ namespace Minecraft.WorldBuilding
             // x+
             {
                 // 0.0, 0.0 -> 3/4, 2/3
-                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 22;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 0.0 -> 3/4, 1/3
-                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 20;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 21;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 0.0, 1.0 -> 1, 2/3
-                texCoords = new Vector2(1.0f / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2(1.0f / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 18;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 23;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 1.0 -> 1, 1/3
-                texCoords = new Vector2(1.0f / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2(1.0f / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 19;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
             }
@@ -216,23 +233,23 @@ namespace Minecraft.WorldBuilding
             // y-
             {
                 // 0.0, 0.0 -> 3/4, 1/3
-                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 28;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 0.0 -> 2/4, 1/3
-                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 26;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 27;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 0.0, 1.0 -> 3/4, 2/3
-                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((3.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 24;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 29;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 1.0 -> 2/4, 2/3
-                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((2.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 25;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
             }
@@ -240,23 +257,23 @@ namespace Minecraft.WorldBuilding
             // y+
             {
                 // 0.0, 0.0 -> 0, 1/3
-                texCoords = new Vector2(0.0f / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2(0.0f / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 34;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 0.0 -> 1/4, 1/3
-                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (1.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 32;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 33;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 0.0, 1.0 -> 0, 2/3
-                texCoords = new Vector2(0.0f / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2(0.0f / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 30;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 indicies = 35;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
                 // 1.0, 1.0 -> 1/4, 2/3
-                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
+                texCoords = new Vector2((1.0f / 4.0f) / NumTexturesRow, (2.0f / 3.0f) / NumTexturesColumn + ((NumTexturesColumn - 1.0f) / NumTexturesColumn));
                 indicies = 31;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
             }
