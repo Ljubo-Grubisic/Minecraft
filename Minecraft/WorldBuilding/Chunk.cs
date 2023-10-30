@@ -1,6 +1,7 @@
 ﻿using GameEngine.ModelLoading;
 using Minecraft.System;
 using OpenTK.Mathematics;
+using System.Collections.Generic;
 
 namespace Minecraft.WorldBuilding
 {
@@ -10,6 +11,7 @@ namespace Minecraft.WorldBuilding
 
         internal static readonly Vector3i Size = new Vector3i(16, 256, 16);
 
+        internal List<BlockStruct> BlocksChanged { get; private set; } = new List<BlockStruct>();
         private Dictionary<Vector3i, BlockType> Blocks = new Dictionary<Vector3i, BlockType>();
         private Dictionary<int, BlockType> Layers = new Dictionary<int, BlockType>();
 
@@ -39,6 +41,7 @@ namespace Minecraft.WorldBuilding
         internal void Unload()
         {
             this.IsUnloaded = true;
+            SaveManager.SaveChunk(this);
             if (Mesh != null)
             {
                 ActionManager.QueueAction(() => this.Mesh.Dispose());
@@ -151,26 +154,15 @@ namespace Minecraft.WorldBuilding
         #region Private
         private void Generate()
         {
-            int height = 0 + (Size.Y / 2);
+            this.Blocks = WorldGenerator.GenerateChunk(this);
 
-            for (int x = 0; x < Size.X; x++)
+            List<BlockStruct>? blocksChanged = SaveManager.LoadChunk(Position);
+            if (blocksChanged != null)
+                this.BlocksChanged = blocksChanged;
+
+            foreach (BlockStruct block in this.BlocksChanged)
             {
-                for (int z = 0; z < Size.Z; z++)
-                {
-                    for (int y = 0; y <= height; y++)
-                    {
-                        if (y == height)
-                            this.Blocks.Add(new Vector3i(x, y, z), BlockType.Grass);
-                        else if (y < height && y > height - 5)
-                            this.Blocks.Add(new Vector3i(x, y, z), BlockType.Dirt);
-                        else
-                            this.Blocks.Add(new Vector3i(x, y, z), BlockType.Stone);
-                    }
-                    for (int y = height + 1; y < Size.Y; y++)
-                    {
-                        this.Blocks.Add(new Vector3i(x, y, z), BlockType.Air);
-                    }
-                }
+                this.Blocks[block.Position] = block.Type;
             }
 
             OptimizeBlocksToLayers();
@@ -220,8 +212,6 @@ namespace Minecraft.WorldBuilding
 
             this.Blocks.TrimExcess();
             this.Layers.TrimExcess();
-            if (Layers.Count == 0)
-                Console.WriteLine("molim");
         }
 
         private bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<Chunk> neighborChunks)
@@ -238,9 +228,9 @@ namespace Minecraft.WorldBuilding
             }
             else
             {
-                if (offset.X == 1)
+                if (offset.X == -1)
                 {
-                    int index = neighborChunks.IndexOf(new Vector2i(1, 0) + this.Position);
+                    int index = neighborChunks.IndexOf(new Vector2i(-1, 0) + this.Position);
 
                     if (index != -1)
                     {
@@ -250,9 +240,9 @@ namespace Minecraft.WorldBuilding
                         }
                     }
                 }
-                else if (offset.X == -1)
+                else if (offset.X == 1)
                 {
-                    int index = neighborChunks.IndexOf(new Vector2i(-1, 0) + this.Position);
+                    int index = neighborChunks.IndexOf(new Vector2i(1, 0) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].GetBlockType(new Vector3i(0, position.Y, position.Z)) != BlockType.Air)
@@ -261,9 +251,9 @@ namespace Minecraft.WorldBuilding
                         }
                     }
                 }
-                else if (offset.Z == 1)
+                else if (offset.Z == -1)
                 {
-                    int index = neighborChunks.IndexOf(new Vector2i(0, 1) + this.Position);
+                    int index = neighborChunks.IndexOf(new Vector2i(0, -1) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, Chunk.Size.Z - 1)) != BlockType.Air)
@@ -272,9 +262,9 @@ namespace Minecraft.WorldBuilding
                         }
                     }
                 }
-                else if (offset.Z == -1)
+                else if (offset.Z == 1)
                 {
-                    int index = neighborChunks.IndexOf(new Vector2i(0, -1) + this.Position);
+                    int index = neighborChunks.IndexOf(new Vector2i(0, 1) + this.Position);
                     if (index != -1)
                     {
                         if (neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, 0)) != BlockType.Air)

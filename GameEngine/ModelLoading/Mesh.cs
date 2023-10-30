@@ -27,6 +27,10 @@ namespace GameEngine.ModelLoading
             this.Vertices = vertices;
             this.Indices = indices;
             this.Textures = textures;
+            
+            this.Vertices.TrimExcess();
+            this.Indices.TrimExcess();
+            this.Textures.TrimExcess();
 
             SetupMesh();
         }

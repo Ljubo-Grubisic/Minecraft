@@ -29,14 +29,16 @@ namespace Minecraft
 
         protected override void OnInit()
         {
+            SaveManager.Init();
             Block.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
+            WorldGenerator.Init();
             ChunkManager.Init();
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 200f };
+            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 25f };
         }
 
         protected override void OnLoadShaders()

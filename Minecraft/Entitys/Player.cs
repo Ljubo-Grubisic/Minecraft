@@ -1,14 +1,5 @@
-﻿using GameEngine.MainLooping;
-using GameEngine.ModelLoading;
-using GameEngine.Rendering;
-using GameEngine.Shadering;
-using Minecraft.WorldBuilding;
+﻿using GameEngine.Rendering;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using GameEngine;
 
 namespace Minecraft.Entitys
 {
