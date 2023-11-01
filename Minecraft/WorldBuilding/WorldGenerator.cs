@@ -23,6 +23,8 @@ namespace Minecraft.WorldBuilding
             Noise = new FastNoiseLite(Seed);
             Noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
             Noise.SetFrequency(0.0038f);
+            Noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            Noise.SetFractalOctaves(4);
         }
 
         internal static Dictionary<Vector3i, BlockType> GenerateChunk(Chunk chunk)
