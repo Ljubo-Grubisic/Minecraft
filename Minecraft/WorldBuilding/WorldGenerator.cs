@@ -23,19 +23,21 @@ namespace Minecraft.WorldBuilding
             Noise = new FastNoiseLite(Seed);
             Noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
             Noise.SetFrequency(0.0038f);
+            Noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            Noise.SetFractalOctaves(4);
         }
 
-        internal static Dictionary<Vector3i, BlockType> GenerateChunk(Chunk chunk)
+        internal static Dictionary<Vector3i, BlockType> GenerateChunkColumn(Vector2i position)
         {
-            int xChunk = chunk.Position.X * Chunk.Size.Z - (Chunk.Size.Z / 2);
-            int yChunk = chunk.Position.Y * Chunk.Size.X - (Chunk.Size.X / 2);
-            int waterLevel = 86;
-            int[,] height = ConvertNoiseToHeight(GetNoiseData(xChunk, yChunk, Chunk.Size.X), Chunk.Size.X);
+            int xChunk = position.X * Chunk.Size - (Chunk.Size / 2);
+            int yChunk = position.Y * Chunk.Size - (Chunk.Size / 2);
+            int waterLevel = 100;
+            int[,] height = ConvertNoiseToHeight(GetNoiseData(xChunk, yChunk, Chunk.Size), Chunk.Size);
             Dictionary<Vector3i, BlockType> blocks = new Dictionary<Vector3i, BlockType>();
             
-            for (int x = 0; x < Chunk.Size.X; x++)
+            for (int x = 0; x < Chunk.Size; x++)
             {
-                for (int z = 0; z < Chunk.Size.Z; z++)
+                for (int z = 0; z < Chunk.Size; z++)
                 {
                     for (int y = 0; y <= height[x, z]; y++)
                     {
@@ -46,7 +48,7 @@ namespace Minecraft.WorldBuilding
                         else
                             blocks.Add(new Vector3i(x, y, z), BlockType.Stone);
                     }
-                    for (int y = height[x, z] + 1; y < Chunk.Size.Y; y++)
+                    for (int y = height[x, z] + 1; y < ChunkColumn.Height; y++)
                     {
                         if (y < waterLevel)
                             blocks.Add(new Vector3i(x, y, z), BlockType.Water);
@@ -79,7 +81,7 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < length; j++)
                 {
-                    data[i, j] = (int)((noise[i, j] + 1) * (Chunk.Size.Y / 2));
+                    data[i, j] = (int)((noise[i, j] + 1) * (ChunkColumn.Height / 2));
                 }
             }
             return data;

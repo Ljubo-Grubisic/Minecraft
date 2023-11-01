@@ -32,9 +32,9 @@ namespace Minecraft.System
         #endregion
 
         #region List Extensions
-        internal static bool Contains(this List<Chunk> values, Vector2i position)
+        internal static bool Contains(this List<ChunkColumn> values, Vector2i position)
         {
-            foreach (Chunk value in values)
+            foreach (ChunkColumn value in values)
             {
                 if (value != null)
                 {
@@ -47,7 +47,7 @@ namespace Minecraft.System
             return false;
         }
 
-        internal static int IndexOf(this List<Chunk> values, Vector2i position)
+        internal static int IndexOf(this List<ChunkColumn> values, Vector2i position)
         {
             for (int i = 0; i < values.Count; i++)
             {
@@ -62,7 +62,7 @@ namespace Minecraft.System
             return -1;
         }
 
-        internal static void Remove(this List<Chunk> values, Vector2i position)
+        internal static void Remove(this List<ChunkColumn> values, Vector2i position)
         {
             for (int i = 0; i < values.Count; i++)
             {
@@ -104,7 +104,7 @@ namespace Minecraft.System
             return values;
         }
 
-        internal static void RemoveUnloadedItems(this List<Chunk> values)
+        internal static void RemoveUnloadedItems(this List<ChunkColumn> values)
         {
             List<int> indicies = new List<int>();
             for (int i = values.Count - 1; i >= 0; i--)
@@ -134,9 +134,9 @@ namespace Minecraft.System
         #endregion
 
         #region Queue Extensions
-        internal static bool Contains(this Queue<Chunk> values, Vector2i position)
+        internal static bool Contains(this Queue<ChunkColumn> values, Vector2i position)
         {
-            foreach (Chunk value in values)
+            foreach (ChunkColumn value in values)
             {
                 if (value != null)
                 {
@@ -157,7 +157,7 @@ namespace Minecraft.System
             List<float> ChunksDistance = new List<float>();
             List<Tuple<float, Vector2i>> ChunksPosition = new List<Tuple<float, Vector2i>>();
 
-            Vector2 PlayerPositionInChunk = position.Xz / Chunk.Size.Xz;
+            Vector2 PlayerPositionInChunk = position.Xz / Chunk.Size;
 
             for (int i = 0; i < queueToList.Count; i++)
             {
@@ -178,15 +178,15 @@ namespace Minecraft.System
             }
         }
 
-        internal static void SortByDistanceMinMax(this Queue<Chunk> queue, Vector3 position)
+        internal static void SortByDistanceMinMax(this Queue<ChunkColumn> queue, Vector3 position)
         {
-            List<Chunk> queueToList = queue.ToList();
+            List<ChunkColumn> queueToList = queue.ToList();
             queue.Clear();
 
             List<float> ChunksDistance = new List<float>();
-            List<Tuple<float, Chunk>> ChunksPosition = new List<Tuple<float, Chunk>>();
+            List<Tuple<float, ChunkColumn>> ChunksPosition = new List<Tuple<float, ChunkColumn>>();
 
-            Vector2 PlayerPositionInChunk = position.Xz / Chunk.Size.Xz;
+            Vector2 PlayerPositionInChunk = position.Xz / Chunk.Size;
 
             for (int i = 0; i < queueToList.Count; i++)
             {
@@ -201,22 +201,22 @@ namespace Minecraft.System
             for (int i = 0; i < ChunksDistance.Count; i++)
             {
                 int index = ChunksPosition.IndexOf(ChunksDistance[i]);
-                Chunk buffer = ChunksPosition[index].Item2;
+                ChunkColumn buffer = ChunksPosition[index].Item2;
                 ChunksPosition.RemoveAt(index);
                 queue.Enqueue(buffer);
             }
         }
 
-        internal static void SortByDistanceMaxMin(this Queue<Chunk> queue, Vector3 position)
+        internal static void SortByDistanceMaxMin(this Queue<ChunkColumn> queue, Vector3 position)
         {
-            List<Chunk> queueToList = queue.ToList();
+            List<ChunkColumn> queueToList = queue.ToList();
             queue.Clear();
 
-            List<Chunk> ChunksPositionSorted = new List<Chunk>();
+            List<ChunkColumn> ChunksPositionSorted = new List<ChunkColumn>();
             List<float> ChunksDistance = new List<float>();
-            List<Tuple<float, Chunk>> ChunksPosition = new List<Tuple<float, Chunk>>();
+            List<Tuple<float, ChunkColumn>> ChunksPosition = new List<Tuple<float, ChunkColumn>>();
 
-            Vector2 PlayerPositionInChunk = position.Xz / Chunk.Size.Xz;
+            Vector2 PlayerPositionInChunk = position.Xz / Chunk.Size;
 
             for (int i = 0; i < queueToList.Count; i++)
             {
@@ -231,7 +231,7 @@ namespace Minecraft.System
             for (int i = ChunksDistance.Count - 1; i > -1; i--)
             {
                 int index = ChunksPosition.IndexOf(ChunksDistance[i]);
-                Chunk buffer = ChunksPosition[index].Item2;
+                ChunkColumn buffer = ChunksPosition[index].Item2;
                 ChunksPosition.RemoveAt(index);
                 queue.Enqueue(buffer);
             }
@@ -260,12 +260,12 @@ namespace Minecraft.System
                 values.Enqueue(chunk);
             }
         }
-        internal static void Remove(this Queue<Chunk> values, Func<Chunk, bool> keeper)
+        internal static void Remove(this Queue<ChunkColumn> values, Func<ChunkColumn, bool> keeper)
         {
-            IEnumerable<Chunk> chunksToRemove = values.ToArray().Where(keeper);
+            IEnumerable<ChunkColumn> chunksToRemove = values.ToArray().Where(keeper);
             values.Clear();
 
-            foreach (Chunk chunk in chunksToRemove)
+            foreach (ChunkColumn chunk in chunksToRemove)
             {
                 values.Enqueue(chunk);
             }
@@ -299,9 +299,9 @@ namespace Minecraft.System
             }
         }
 
-        internal static void RemoveNotIn(this Queue<Chunk> values, List<Vector2i> valuesNotToRemove)
+        internal static void RemoveNotIn(this Queue<ChunkColumn> values, List<Vector2i> valuesNotToRemove)
         {
-            List<Chunk> valuesToList = values.ToList();
+            List<ChunkColumn> valuesToList = values.ToList();
             values.Clear();
 
             for (int i = 0; i < valuesToList.Count; i++)

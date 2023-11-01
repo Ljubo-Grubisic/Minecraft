@@ -59,7 +59,7 @@ namespace Minecraft.System
         }
 
         // CX*Y*B*X*Y*Z*,B*X*Y*Z*,;
-        internal static void SaveChunk(Chunk chunk)
+        internal static void SaveChunkColumn(ChunkColumn chunk, List<BlockStruct> blocksChanged)
         {
             string text = "";
             Dictionary<Vector2i, (List<BlockStruct>, int)> chunksBlocksChanged = new Dictionary<Vector2i, (List<BlockStruct>, int)>();
@@ -76,16 +76,16 @@ namespace Minecraft.System
 
             if (chunksBlocksChanged.TryGetValue(chunk.Position, out chunkBlocksChanged))
             {
-                if (chunk.BlocksChanged != chunkBlocksChanged.Item1)
+                if (blocksChanged != chunkBlocksChanged.Item1)
                 {
                     File.WriteAllText(SaveDirectory + "/chunks.txt", RemoveTextUntilChar(text, ';', chunkBlocksChanged.Item2));
-                    if (chunk.BlocksChanged.Count > 0)
+                    if (blocksChanged.Count > 0)
                     {
                         using (StreamWriter writer = File.AppendText(SaveDirectory + "/chunks.txt"))
                         {
 
                             writer.Write("C" + "X" + chunk.Position.X + "Y" + chunk.Position.Y);
-                            foreach (BlockStruct block in chunk.BlocksChanged)
+                            foreach (BlockStruct block in blocksChanged)
                             {
                                 writer.Write("B" + (int)block.Type + "X" + block.Position.X + "Y" + block.Position.Y + "Z" + block.Position.Z + ",");
                             }
@@ -97,12 +97,12 @@ namespace Minecraft.System
             }
             else
             {
-                if (chunk.BlocksChanged.Count > 0)
+                if (blocksChanged.Count > 0)
                 {
                     using (StreamWriter writer = File.AppendText(SaveDirectory + "/chunks.txt"))
                     {
                         writer.Write("C" + "X" + chunk.Position.X + "Y" + chunk.Position.Y);
-                        foreach (BlockStruct block in chunk.BlocksChanged)
+                        foreach (BlockStruct block in blocksChanged)
                         {
                             writer.Write("B" + (int)block.Type + "X" + block.Position.X + "Y" + block.Position.Y + "Z" + block.Position.Z + ",");
                         }
@@ -113,7 +113,7 @@ namespace Minecraft.System
             }
         }
 
-        internal static List<BlockStruct>? LoadChunk(Vector2i position)
+        internal static List<BlockStruct>? LoadChunkColumn(Vector2i position)
         {
             Dictionary<Vector2i, List<BlockStruct>> chunksBlocksChanged = new Dictionary<Vector2i, List<BlockStruct>>();
             List<BlockStruct> blocks = new List<BlockStruct>();

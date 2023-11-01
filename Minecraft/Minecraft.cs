@@ -38,7 +38,7 @@ namespace Minecraft
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 100f };
+            return new Camera(new Vector3(0, 150.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 100f };
         }
 
         protected override void OnLoadShaders()
@@ -54,7 +54,7 @@ namespace Minecraft
 
         protected override void OnUpdate(FrameEventArgs args)
         {
-            //Console.WriteLine(Math.Round(1 / args.Time));
+            Console.WriteLine("MainThread fps:" + Math.Round(1 / args.Time));
 
             ActionManager.InvokeActions();
 
@@ -83,20 +83,24 @@ namespace Minecraft
 
             lock (ChunkManager.ChunksLoaded)
             {
-                foreach (Chunk chunk in ChunkManager.ChunksLoaded.Values.ToList())
+                foreach (ChunkColumn chunkColumn in ChunkManager.ChunksLoaded.Values.ToList())
                 {
-                    if (chunk.Mesh != null)
+                    for (int i = 0; i < chunkColumn.Chunks.Length; i++)
                     {
-                        GL.BindVertexArray(chunk.Mesh.VAO);
+                        if (chunkColumn.Chunks[i].Mesh != null)
+                        {
+                            GL.BindVertexArray(chunkColumn.Chunks[i].Mesh.VAO);
 
-                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
+                            Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunkColumn.Position.X * Chunk.Size, (i * Chunk.Size), chunkColumn.Position.Y * Chunk.Size)));
 
-                        GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
+                            GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
 
-                        GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
+                            GL.DrawArrays(PrimitiveType.Triangles, 0, chunkColumn.Chunks[i].Mesh.Vertices.Count);
 
-                        GL.BindVertexArray(0);
+                            GL.BindVertexArray(0);
+                        }
                     }
+                    
                 }
             }
 
