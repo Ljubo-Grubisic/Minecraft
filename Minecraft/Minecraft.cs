@@ -11,6 +11,7 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Minecraft.System;
 using System.Collections.Generic;
+using BenchmarkDotNet.Running;
 
 namespace Minecraft
 {
@@ -33,7 +34,8 @@ namespace Minecraft
             Block.Init();
             WorldGenerator.Init();
             ChunkManager.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
+            Structure.Init();
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 64 };
         }
 
         protected override Camera OnCreateCamera()
@@ -81,15 +83,21 @@ namespace Minecraft
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
 
+            // Directional light
+            Shader.SetVec3("dirLight.ambient", 0.55f, 0.55f, 0.55f);
+            Shader.SetVec3("dirLight.diffuse", 0.65f, 0.65f, 0.65f);
+
+            Shader.SetVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+
             lock (ChunkManager.ChunksLoaded)
             {
-                foreach (Chunk chunk in ChunkManager.ChunksLoaded.Values.ToList())
+                foreach (ChunkColumn chunk in ChunkManager.ChunksLoaded.Values.ToList())
                 {
                     if (chunk.Mesh != null)
                     {
                         GL.BindVertexArray(chunk.Mesh.VAO);
 
-                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * Chunk.Size.X, 0.0f, chunk.Position.Y * Chunk.Size.Z)));
+                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * ChunkColumn.ChunkSize, 0.0f, chunk.Position.Y * ChunkColumn.ChunkSize)));
 
                         GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
 

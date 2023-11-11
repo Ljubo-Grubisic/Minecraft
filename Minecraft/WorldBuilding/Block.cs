@@ -16,7 +16,7 @@ namespace Minecraft.WorldBuilding
         Sand,
         Water,
         OakLeaves,
-        Oak,
+        OakLog,
         Cactus,
     }
 
@@ -126,7 +126,7 @@ namespace Minecraft.WorldBuilding
             TextureIndex.Add((BlockType.Water, new Vector2i(0, 4)));
 
             TextureIndex.Add((BlockType.OakLeaves, new Vector2i(1, 0)));
-            TextureIndex.Add((BlockType.Oak, new Vector2i(1, 2)));
+            TextureIndex.Add((BlockType.OakLog, new Vector2i(1, 2)));
             TextureIndex.Add((BlockType.Cactus, new Vector2i(1, 1)));
         }
 

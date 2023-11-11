@@ -59,7 +59,7 @@ namespace Minecraft.System
         }
 
         // CX*Y*B*X*Y*Z*,B*X*Y*Z*,;
-        internal static void SaveChunk(Chunk chunk)
+        internal static void SaveChunk(ChunkColumn chunk)
         {
             string text = "";
             Dictionary<Vector2i, (List<BlockStruct>, int)> chunksBlocksChanged = new Dictionary<Vector2i, (List<BlockStruct>, int)>();

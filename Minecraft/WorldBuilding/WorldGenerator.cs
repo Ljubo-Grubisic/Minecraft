@@ -1,15 +1,5 @@
-﻿using Minecraft.System;
-using GameEngine;
-using GameEngine.MainLooping;
-using GameEngine.Rendering;
-using GameEngine.Shadering;
-using Minecraft.Entitys;
-using Minecraft.WorldBuilding;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
-using OpenTK.Windowing.Common;
-using Assimp;
-using System.Drawing;
+﻿using OpenTK.Mathematics;
+using System.Collections.Concurrent;
 
 namespace Minecraft.WorldBuilding
 {
@@ -27,36 +17,39 @@ namespace Minecraft.WorldBuilding
             Noise.SetFractalOctaves(4);
         }
 
-        internal static Dictionary<Vector3i, BlockType> GenerateChunk(Chunk chunk)
+        internal static Dictionary<Vector3i, BlockType> GenerateChunk(ChunkColumn chunk)
         {
-            int xChunk = chunk.Position.X * Chunk.Size.Z - (Chunk.Size.Z / 2);
-            int yChunk = chunk.Position.Y * Chunk.Size.X - (Chunk.Size.X / 2);
-            int waterLevel = 86;
-            int[,] height = ConvertNoiseToHeight(GetNoiseData(xChunk, yChunk, Chunk.Size.X), Chunk.Size.X);
+            int xChunk = chunk.Position.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+            int yChunk = chunk.Position.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+            int waterLevel = 100;
+            int[,] height = ConvertNoiseToHeight(GetNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize), ChunkColumn.ChunkSize);
             Dictionary<Vector3i, BlockType> blocks = new Dictionary<Vector3i, BlockType>();
-            
-            for (int x = 0; x < Chunk.Size.X; x++)
+
+            for (int x = 0; x < ChunkColumn.ChunkSize; x++)
             {
-                for (int z = 0; z < Chunk.Size.Z; z++)
+                for (int z = 0; z < ChunkColumn.ChunkSize; z++)
                 {
                     for (int y = 0; y <= height[x, z]; y++)
                     {
                         if (y == height[x, z])
-                            blocks.Add(new Vector3i(x, y, z), BlockType.Grass);
+                            blocks[new Vector3i(x, y, z)] = BlockType.Grass;
                         else if (y < height[x, z] && y > height[x, z] - 5)
-                            blocks.Add(new Vector3i(x, y, z), BlockType.Dirt);
+                            blocks[new Vector3i(x, y, z)] = BlockType.Dirt;
                         else
-                            blocks.Add(new Vector3i(x, y, z), BlockType.Stone);
+                            blocks[new Vector3i(x, y, z)] = BlockType.Stone;
                     }
-                    for (int y = height[x, z] + 1; y < Chunk.Size.Y; y++)
+                    for (int y = height[x, z] + 1; y < ChunkColumn.Height; y++)
                     {
                         if (y < waterLevel)
-                            blocks.Add(new Vector3i(x, y, z), BlockType.Water);
+                            blocks[new Vector3i(x, y, z)] = BlockType.Water;
                         else
-                            blocks.Add(new Vector3i(x, y, z), BlockType.Air);
+                            blocks[new Vector3i(x, y, z)] = BlockType.Air;
                     }
                 }
             }
+
+            if (height[5, 5] > waterLevel)
+                Structure.AddStructure(ref blocks, StructureType.OakTree, new Vector3i(5, height[5, 5] + 1, 5));
 
             return blocks;
         }
@@ -81,7 +74,7 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < length; j++)
                 {
-                    data[i, j] = (int)((noise[i, j] + 1) * (Chunk.Size.Y / 2));
+                    data[i, j] = (int)((noise[i, j] + 1) * (ChunkColumn.Height / 2));
                 }
             }
             return data;
