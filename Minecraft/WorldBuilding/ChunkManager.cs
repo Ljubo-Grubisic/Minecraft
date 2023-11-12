@@ -118,24 +118,22 @@ namespace Minecraft.WorldBuilding
 
                         case ChunkLoadingSteps.Bake:
 
-                            for (int i = 0; i < previousTimeElapsed; i++)
+                            if (ChunksWaitingToBake.Count != 0)
                             {
-                                if (ChunksWaitingToBake.Count != 0)
+                                ChunkColumn chunkBaked;
+                                do
                                 {
-                                    ChunkColumn chunkBaked;
-                                    do
-                                    {
-                                        chunkBaked = ChunksWaitingToBake.Dequeue();
-                                        chunkBaked.IsBaking = true;
-                                    }
-                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+                                    chunkBaked = ChunksWaitingToBake.Dequeue();
+                                    chunkBaked.IsBaking = true;
+                                }
+                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
-                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
-                                    {
-                                        BakeChunk(chunkBaked);
-                                    }
+                                if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                {
+                                    BakeChunk(chunkBaked);
                                 }
                             }
+
                             break;
 
                         case ChunkLoadingSteps.Unload:

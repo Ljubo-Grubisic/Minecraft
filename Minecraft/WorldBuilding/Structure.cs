@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Minecraft.System;
 using OpenTK.Mathematics;
 
 namespace Minecraft.WorldBuilding
@@ -112,7 +107,7 @@ namespace Minecraft.WorldBuilding
             CactusBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, 0), Type = BlockType.Cactus });
         }
 
-        internal static void Init()
+        static Structure()
         {
             InitStructureBlocks();
             StructureIndex.Add((StructureType.OakTree, OakTreeBlocks));
@@ -131,12 +126,36 @@ namespace Minecraft.WorldBuilding
             return new List<BlockStruct>();
         }
 
-        internal static void AddStructure(ref Dictionary<Vector3i, BlockType> blocks, StructureType structureType, Vector3i position)
+        internal static void AddStructure(ref Dictionary<Vector3i, BlockType> blocks, StructureType structureType, Vector3i position, Vector2i chunkColumnPosition)
         {
             List<BlockStruct> structureBlocks = GetBlocksByStructure(structureType);
+            bool isBlockXPositive, isBlockXNegative, isBlockZPositive, isBlockZNegative;
+
             foreach (BlockStruct block in structureBlocks)
             {
-                blocks[block.Position + position] = block.Type;
+                Vector3i blockPosition = block.Position + position;
+                if (!ChunkColumn.IsOutOfRange(blockPosition))
+                {
+                    blocks[blockPosition] = block.Type;
+                }
+                else
+                {
+                    Vector2i chunkColumnPositionNeighbor = new Vector2i();
+                    // ChunkColumn x+
+                    isBlockXPositive = blockPosition.X > ChunkColumn.ChunkSize - 1;
+                    isBlockXNegative = blockPosition.X < 0;
+
+                    isBlockZPositive = blockPosition.Z > ChunkColumn.ChunkSize - 1;
+                    isBlockZNegative = blockPosition.Z < 0;
+
+                    chunkColumnPositionNeighbor.X = isBlockXPositive ? 1 : 0;
+                    chunkColumnPositionNeighbor.X = isBlockXNegative ? -1 : 0;
+
+                    chunkColumnPositionNeighbor.Y = isBlockZPositive ? 1 : 0;
+                    chunkColumnPositionNeighbor.Y = isBlockZNegative ? -1 : 0;
+
+                    
+                }
             }
         }
 

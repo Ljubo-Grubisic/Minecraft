@@ -131,6 +131,36 @@ namespace Minecraft.System
             }
             return -1;
         }
+
+        internal static Vector2 ValueOfLesser(this List<Vector2> vector2s, float x)
+        {
+            int lastIndexLesser = -1;
+            for (int i = 0; i < vector2s.Count; i++)
+            {
+                if (vector2s[i].X < x)
+                    lastIndexLesser = i;
+                else if (vector2s[i].X == x)
+                    return vector2s[i];
+                else if (vector2s[i].X > x)
+                    return vector2s[lastIndexLesser];
+            }
+            return new Vector2(0, 0);
+        }
+
+        internal static Vector2 ValueOfGreater(this List<Vector2> vector2s, float x)
+        {
+            int lastIndexLesser = -1;
+            for (int i = vector2s.Count - 1; i > 0; i--)
+            {
+                if (vector2s[i].X > x)
+                    lastIndexLesser = i;
+                else if (vector2s[i].X == x)
+                    return vector2s[i];
+                else if (vector2s[i].X < x)
+                    return vector2s[lastIndexLesser];
+            }
+            return new Vector2(1, 1);
+        }
         #endregion
 
         #region Queue Extensions

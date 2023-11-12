@@ -30,12 +30,9 @@ namespace Minecraft
 
         protected override void OnInit()
         {
-            SaveManager.Init();
             Block.Init();
-            WorldGenerator.Init();
             ChunkManager.Init();
-            Structure.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 64 };
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 65 };
         }
 
         protected override Camera OnCreateCamera()
@@ -74,8 +71,7 @@ namespace Minecraft
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     WireFrameMode = true;
                 }
-            }
-
+            } 
         }
         protected override void OnRender(FrameEventArgs args, Matrix4 view, Matrix4 projection)
         {

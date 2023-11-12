@@ -7,15 +7,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using static System.Reflection.Metadata.BlobBuilder;
+using System.Runtime.Serialization;
 
 namespace Minecraft.WorldBuilding
 {
+    [DataContract]
     public class ChunkColumn
     {
+        [DataMember]
         internal Vector2i Position { get; private set; }
         internal static int ChunkSize { get; } = 16;
         internal static int Height { get; } = 256;
 
+        [DataMember]
         internal List<BlockStruct> BlocksChanged { get; private set; } = new List<BlockStruct>();
         private Dictionary<Vector3i, BlockType> Blocks = new Dictionary<Vector3i, BlockType>();
         private Dictionary<int, BlockType> Layers = new Dictionary<int, BlockType>();  
@@ -161,16 +165,15 @@ namespace Minecraft.WorldBuilding
         {
             this.Blocks = WorldGenerator.GenerateChunk(this);
 
-            List<BlockStruct>? blocksChanged = SaveManager.LoadChunk(Position);
-            if (blocksChanged != null)
-                this.BlocksChanged = blocksChanged;
+            List<BlockStruct> blocksChanged = SaveManager.LoadChunk(Position);
+            this.BlocksChanged = blocksChanged;
 
             foreach (BlockStruct block in this.BlocksChanged)
             {
                 this.Blocks[block.Position] = block.Type;
             }
 
-            OptimizeBlocksToLayersSecond();
+            OptimizeBlocksToLayers();
         }
 
         public void OptimizeBlocksToLayers()
@@ -219,61 +222,12 @@ namespace Minecraft.WorldBuilding
             this.Layers.TrimExcess();
         }
 
-        public void OptimizeBlocksToLayersSecond()
-        {
-            Vector3i index = new Vector3i();
-            BlockType blockType = new BlockType();
-            for (int y = 0; y < Height; y++)
-            {
-                bool firstBlock = true;
-                bool isLayerSame = true;
-
-                for (int x = 0; x < ChunkSize; x++)
-                {
-                    for (int z = 0; z < ChunkSize; z++)
-                    {
-                        index.X = x; index.Y = y; index.Z = z;
-                        if (Blocks.TryGetValue(index, out BlockType BlocksType))
-                        {
-                            if (firstBlock)
-                            {
-                                blockType = BlocksType;
-                                firstBlock = false;
-                            }
-                            if (blockType != BlocksType)
-                            {
-                                isLayerSame = false;
-                            }
-                        }
-                    }
-                }
-
-                if (isLayerSame)
-                {
-                    this.Layers.Add(y, blockType);
-
-                    for (int x = 0; x < ChunkSize; x++)
-                    {
-                        for (int z = 0; z < ChunkSize; z++)
-                        {
-                            index.X = x; index.Y = y; index.Z = z;
-
-                            this.Blocks.Remove(index);
-                        }
-                    }
-                }
-            }
-
-            this.Blocks.TrimExcess();
-            this.Layers.TrimExcess();
-        }
-
         private bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<ChunkColumn> neighborChunks)
         {
             Vector3i position = block.Position + offset + (new Vector3i(ChunkSize, Height, ChunkSize) / 2);
             BlockType blockType = new BlockType();
 
-            if (!IsOutOfRange(position, new Vector3i(ChunkSize, Height, ChunkSize)))
+            if (!IsOutOfRange(position))
             {
                 if (this.GetBlockType(position) != BlockType.Air)
                 {
@@ -331,13 +285,13 @@ namespace Minecraft.WorldBuilding
             return false;
         }
 
-        private static bool IsOutOfRange(Vector3i position, Vector3i size)
+        internal static bool IsOutOfRange(Vector3i position)
         {
             if (position.X < 0 || position.Y < 0 || position.Z < 0)
             {
                 return true;
             }
-            else if (position.X > size.X - 1 || position.Y > size.Y - 1 || position.Z > size.Z - 1)
+            else if (position.X > ChunkSize - 1 || position.Y > Height - 1 || position.Z > ChunkSize - 1)
             {
                 return true;
             }

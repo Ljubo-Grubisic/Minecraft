@@ -3,6 +3,7 @@ using GameEngine.Shadering;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace Minecraft.WorldBuilding
 {
@@ -26,9 +27,12 @@ namespace Minecraft.WorldBuilding
         Transparent
     }
 
+    [DataContract]
     internal struct BlockStruct
     {
+        [DataMember]
         internal Vector3i Position;
+        [DataMember]
         internal BlockType Type;
     }
 
