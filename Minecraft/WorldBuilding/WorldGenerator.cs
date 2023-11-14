@@ -64,11 +64,15 @@ namespace Minecraft.WorldBuilding
 
             Random random = new Random();
             int randomX = random.Next(0, ChunkColumn.ChunkSize);
-            int randomZ = random.Next(0, ChunkColumn.ChunkSize); 
+            int randomZ = random.Next(0, ChunkColumn.ChunkSize);
+            randomX = 0;
+            randomZ = 0;
 
             if (height[randomX, randomZ] > waterLevel)
                 Structure.AddStructure(ref blocks, StructureType.OakTree, new Vector3i(randomX, height[randomX, randomZ] + 1, randomZ), chunk.Position);
 
+            Structure.AddGhostBlocks(ref blocks, chunk.Position);
+            
             return blocks;
         }
     }

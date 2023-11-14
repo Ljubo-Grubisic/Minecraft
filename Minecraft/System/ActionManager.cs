@@ -12,30 +12,45 @@ namespace Minecraft.System
     /// </summary>
     internal static class ActionManager
     {
-        private static Queue<Action> Actions = new Queue<Action>();
+        private static List<Queue<Action>> ActionsQueues = new List<Queue<Action>>(); 
 
-        internal static void QueueAction(Action action)
+        static ActionManager() 
         {
-            lock (Actions)
-                Actions.Enqueue(action);
+            for (int i = 0; i < (int)Thread.NumThreads; i++)
+            {
+                ActionsQueues.Add(new Queue<Action>());
+            }
         }
 
-        internal static void InvokeActions(int numberOfActions)
+        internal static void QueueAction(Thread thread, Action action)
+        {
+            lock (ActionsQueues[(int)thread])
+                ActionsQueues[(int)thread].Enqueue(action);
+        }
+
+        internal static void InvokeActions(Thread thread, int numberOfActions)
         {
             for (int i = 0; i < numberOfActions; i++)
             {
-                lock (Actions)
-                    Actions.Dequeue().Invoke();
+                lock (ActionsQueues[(int)thread])
+                    ActionsQueues[(int)thread].Dequeue().Invoke();
             }
         }
 
-        internal static void InvokeActions()
+        internal static void InvokeActions(Thread thread)
         {
-            for (int i = 0; i < Actions.Count; i++)
+            for (int i = 0; i < ActionsQueues[(int)thread].Count; i++)
             {
-                lock (Actions)
-                    Actions.Dequeue().Invoke();
+                lock (ActionsQueues[(int)thread])
+                    ActionsQueues[(int)thread].Dequeue().Invoke();
             }
+        }
+
+        internal enum Thread
+        {
+            Main,
+            ChunkManager,
+            NumThreads
         }
     }
 }

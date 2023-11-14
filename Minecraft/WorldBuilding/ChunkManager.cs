@@ -1,4 +1,5 @@
-﻿using Minecraft.Entitys;
+﻿using Microsoft.Diagnostics.Tracing.Parsers.JScript;
+using Minecraft.Entitys;
 using Minecraft.System;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -27,7 +28,7 @@ namespace Minecraft.WorldBuilding
 
         internal static int SpawnChunkSize { get; set; } = 1;
 
-        internal static float TicksPerSecond { get; set; } = 500f;
+        internal static float TicksPerSecond { get; set; } = 200f;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static readonly Func<KeyValuePair<Vector2i, ChunkColumn>, bool> keyRemoverDictionaryByDistance = chunk =>
@@ -42,6 +43,36 @@ namespace Minecraft.WorldBuilding
             LoadSpawnChunks();
             ChunkManagingThread = new Thread(Loop) { IsBackground = true, Name = "ChunkManagingThread", Priority = ThreadPriority.AboveNormal };
             ChunkManagingThread.Start();
+        }
+
+        internal static ChunkColumn? GetChunkColumn(Vector2i position)
+        {
+            lock (ChunksLoaded)
+            {
+                if (ChunksLoaded.TryGetValue(position, out ChunkColumn? chunkColumn))
+                {
+                    return chunkColumn;
+                }
+            }
+            return null;
+        }
+
+        internal static void ChangeBlock(ChunkColumn chunkColumn, BlockStruct blockStruct)
+        {
+            lock (ChunksLoaded)
+            {
+                if (ChunksLoaded.ContainsKey(chunkColumn.Position))
+                {
+                    ChunksLoaded[chunkColumn.Position].ChangeBlockType(blockStruct);
+                    lock (ChunksWaitingToBake)
+                    {
+                        if (!ChunksWaitingToUnloadDictionary.ContainsKey(chunkColumn.Position) && !ChunksWaitingToBake.Contains(chunkColumn))
+                        {
+                            ChunksWaitingToBake.Enqueue(chunkColumn);
+                        }
+                    }
+                }
+            }
         }
 
         private static void Loop()
@@ -64,6 +95,8 @@ namespace Minecraft.WorldBuilding
                 {
                     Console.WriteLine("ChunkManaginThread fps:" + (float)Math.Round(1 / totalTimeBeforeUpdate));
                     totalTimeBeforeUpdate = 0;
+
+                    ActionManager.InvokeActions(ActionManager.Thread.ChunkManager);
 
                     ChunksWaitingToGenerate.Clear();
 

@@ -1,12 +1,6 @@
-﻿using BenchmarkDotNet.Attributes;
-using GameEngine.ModelLoading;
-using ImGuiNET;
+﻿using GameEngine.ModelLoading;
 using Minecraft.System;
 using OpenTK.Mathematics;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using static System.Reflection.Metadata.BlobBuilder;
 using System.Runtime.Serialization;
 
 namespace Minecraft.WorldBuilding
@@ -22,7 +16,7 @@ namespace Minecraft.WorldBuilding
         [DataMember]
         internal List<BlockStruct> BlocksChanged { get; private set; } = new List<BlockStruct>();
         private Dictionary<Vector3i, BlockType> Blocks = new Dictionary<Vector3i, BlockType>();
-        private Dictionary<int, BlockType> Layers = new Dictionary<int, BlockType>();  
+        private Dictionary<int, BlockType> Layers = new Dictionary<int, BlockType>();
 
         internal Mesh Mesh { get; private set; }
 
@@ -47,13 +41,18 @@ namespace Minecraft.WorldBuilding
                 throw new IndexOutOfRangeException("Index out of range");
         }
 
+        internal void ChangeBlockType(BlockStruct blockStruct)
+        {
+            Blocks[blockStruct.Position] = blockStruct.Type;
+        }
+
         internal void Unload()
         {
             this.IsUnloaded = true;
             SaveManager.SaveChunk(this);
             if (Mesh != null)
             {
-                ActionManager.QueueAction(() => this.Mesh.Dispose());
+                ActionManager.QueueAction(ActionManager.Thread.Main, () => this.Mesh.Dispose());
             }
         }
 
@@ -148,7 +147,7 @@ namespace Minecraft.WorldBuilding
                     }
                 }
 
-                ActionManager.QueueAction(() =>
+                ActionManager.QueueAction(ActionManager.Thread.Main, () =>
                 {
                     Mesh mesh = new Mesh(vertices, new(), new());
                     if (this.Mesh != null)

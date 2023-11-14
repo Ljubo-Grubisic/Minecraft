@@ -32,7 +32,7 @@ namespace Minecraft
         {
             Block.Init();
             ChunkManager.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 65 };
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
         }
 
         protected override Camera OnCreateCamera()
@@ -55,7 +55,7 @@ namespace Minecraft
         {
             //Console.WriteLine(Math.Round(1 / args.Time));
 
-            ActionManager.InvokeActions();
+            ActionManager.InvokeActions(ActionManager.Thread.Main);
 
             Player.Update(Camera);
 

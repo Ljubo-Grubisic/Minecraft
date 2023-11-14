@@ -1,5 +1,7 @@
-﻿using Minecraft.System;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Minecraft.System;
 using OpenTK.Mathematics;
+using System.Management;
 
 namespace Minecraft.WorldBuilding
 {
@@ -14,7 +16,9 @@ namespace Minecraft.WorldBuilding
         private static List<BlockStruct> OakTreeBlocks = new List<BlockStruct>();
         private static List<BlockStruct> CactusBlocks = new List<BlockStruct>();
 
-        private static List<(StructureType, List<BlockStruct>)> StructureIndex = new List<(StructureType, List<BlockStruct>)>();
+        private static Dictionary<StructureType, List<BlockStruct>> StructureIndex = new Dictionary<StructureType, List<BlockStruct>>();
+
+        private static Dictionary<Vector2i, List<BlockStruct>> ChunkColumnGhostBlocks = new Dictionary<Vector2i, List<BlockStruct>>();
 
         private static void InitStructureBlocks()
         {
@@ -110,18 +114,15 @@ namespace Minecraft.WorldBuilding
         static Structure()
         {
             InitStructureBlocks();
-            StructureIndex.Add((StructureType.OakTree, OakTreeBlocks));
-            StructureIndex.Add((StructureType.Cactus, CactusBlocks));
+            StructureIndex.Add(StructureType.OakTree, OakTreeBlocks);
+            StructureIndex.Add(StructureType.Cactus, CactusBlocks);
         }
 
         internal static List<BlockStruct> GetBlocksByStructure(StructureType structureType)
         {
-            foreach ((StructureType, List<BlockStruct>) tuple in StructureIndex)
+            if (StructureIndex.TryGetValue(structureType, out List<BlockStruct>? blocks))
             {
-                if (tuple.Item1 == structureType)
-                {
-                    return tuple.Item2;
-                }
+                return blocks;
             }
             return new List<BlockStruct>();
         }
@@ -141,21 +142,56 @@ namespace Minecraft.WorldBuilding
                 else
                 {
                     Vector2i chunkColumnPositionNeighbor = new Vector2i();
-                    // ChunkColumn x+
+                    Vector3i blockPositionNeigbor = blockPosition;
+                    
                     isBlockXPositive = blockPosition.X > ChunkColumn.ChunkSize - 1;
                     isBlockXNegative = blockPosition.X < 0;
 
                     isBlockZPositive = blockPosition.Z > ChunkColumn.ChunkSize - 1;
                     isBlockZNegative = blockPosition.Z < 0;
 
-                    chunkColumnPositionNeighbor.X = isBlockXPositive ? 1 : 0;
-                    chunkColumnPositionNeighbor.X = isBlockXNegative ? -1 : 0;
+                    if (isBlockXPositive)
+                        chunkColumnPositionNeighbor.X = 1;
+                    else if (isBlockXNegative)
+                        chunkColumnPositionNeighbor.X = -1;
 
-                    chunkColumnPositionNeighbor.Y = isBlockZPositive ? 1 : 0;
-                    chunkColumnPositionNeighbor.Y = isBlockZNegative ? -1 : 0;
+                    if (isBlockZPositive)
+                        chunkColumnPositionNeighbor.Y = 1;
+                    else if (isBlockZNegative)
+                        chunkColumnPositionNeighbor.Y = -1;
 
-                    
+                    blockPositionNeigbor.X -= chunkColumnPositionNeighbor.X * ChunkColumn.ChunkSize;
+                    blockPositionNeigbor.Z -= chunkColumnPositionNeighbor.Y * ChunkColumn.ChunkSize;
+
+                    ChunkColumn? chunkColumnNeigbor = ChunkManager.GetChunkColumn(chunkColumnPositionNeighbor + chunkColumnPosition);
+                    if (chunkColumnNeigbor != null)
+                    {
+                        ChunkManager.ChangeBlock(chunkColumnNeigbor, new BlockStruct { Position = blockPositionNeigbor, Type = block.Type });
+                    }
+                    else
+                    {
+                        if (!ChunkColumnGhostBlocks.ContainsKey(chunkColumnPositionNeighbor + chunkColumnPosition))
+                        {
+                            ChunkColumnGhostBlocks.Add(chunkColumnPositionNeighbor + chunkColumnPosition, new List<BlockStruct> { new BlockStruct { Position = blockPositionNeigbor, Type = block.Type } });
+                        }
+                        else
+                        {
+                            ChunkColumnGhostBlocks[chunkColumnPositionNeighbor + chunkColumnPosition].Add(new BlockStruct { Position = blockPositionNeigbor, Type = block.Type });
+                        }
+                    }
                 }
+            }
+        }
+
+        internal static void AddGhostBlocks(ref Dictionary<Vector3i, BlockType> blocks, Vector2i position)
+        {
+            if (ChunkColumnGhostBlocks.TryGetValue(position, out List<BlockStruct>? ghostBlocks))
+            {
+                foreach (BlockStruct block in ghostBlocks)
+                {
+                    blocks[block.Position] = block.Type;
+                }
+                //ChunkColumnGhostBlocks.Remove(position);
             }
         }
 
