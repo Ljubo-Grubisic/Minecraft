@@ -11,7 +11,7 @@ namespace Minecraft.System
     {
         private FastNoiseLite Noise { get; set; }
 
-        internal List<Vector2> Splines { get; set; } = new List<Vector2>();
+        private List<Vector2> Splines { get; set; } = new List<Vector2>();
 
         internal FastNoiseLite.NoiseType NoiseType 
         { 
@@ -54,6 +54,8 @@ namespace Minecraft.System
             this.NumFractalOcaves = numFractalOcaves;
             this.Frequency = frequency;
             this.Seed = seed;
+            this.Splines.Add(new Vector2(0, 0));
+            this.Splines.Add(new Vector2(1, 1));
         }
 
         internal void CreateSpline(Vector2 position)
@@ -97,7 +99,14 @@ namespace Minecraft.System
             Vector2 spline1 = this.Splines.ValueOfLesser(noiseData);
             Vector2 spline2 = this.Splines.ValueOfGreater(noiseData);
 
+            if (spline1 == spline2)
+                 return noiseData;
+
             float data = (((spline2.Y - spline1.Y) / (spline2.X - spline1.X)) * (noiseData - spline1.X)) + spline1.Y;
+
+            if (data < 0 || data > 1 || float.IsNaN(data))
+                throw new Exception("Invalid data");
+
             return data;
         }
 

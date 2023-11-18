@@ -1,0 +1,65 @@
+[
+  {
+    "BlockType": "Air",
+    "BlockVisibility": "Transparent",
+    "BlockShape": "None",
+    "TextureIndexRow": -1,
+    "TextureIndexColumn": -1
+  },
+  {
+    "BlockType": "Dirt",
+    "BlockShape": "Square",
+    "BlockVisibility": "Opaque",
+    "TextureIndexRow": 0,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "Grass",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 0,
+    "TextureIndexColumn": 1
+  },
+  {
+    "BlockType": "Stone",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 0,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "Sand",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 0,
+    "TextureIndexColumn": 3
+  },
+  {
+    "BlockType": "Water",
+    "BlockVisibility": "Transparent",
+    "BlockShape": "Square",
+    "TextureIndexRow": 0,
+    "TextureIndexColumn": 4
+  },
+  {
+    "BlockType": "OakLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 1,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "OakLog",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 1,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "Cactus",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 1,
+    "TextureIndexColumn": 1
+  }
+]

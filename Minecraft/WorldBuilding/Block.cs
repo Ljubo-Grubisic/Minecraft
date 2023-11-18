@@ -4,9 +4,13 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Reflection;
 
 namespace Minecraft.WorldBuilding
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     internal enum BlockType : byte
     {
         None = 0,
@@ -21,10 +25,20 @@ namespace Minecraft.WorldBuilding
         Cactus,
     }
 
-    internal enum BlockVisibilty
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    internal enum BlockVisibility : byte
     {
+        None = 0,
         Opaque,
         Transparent
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    internal enum BlockShape : byte  
+    {
+        None = 0,
+        Square, 
+        X
     }
 
     [DataContract]
@@ -93,29 +107,40 @@ namespace Minecraft.WorldBuilding
             new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(0.0f,  1.0f,  0.0f), TexCoords = new Vector2(0.0f, 1.0f) }
         };
 
-        private static List<(BlockType, Vector2i)> TextureIndex = new List<(BlockType, Vector2i)>();
+        private static Dictionary<BlockType, BlockConfig> BlockConfigs = new Dictionary<BlockType, BlockConfig>();
 
-        internal static Vector2 GetTexCoordsOffset(BlockType type)
+        internal static Vector2 GetTexCoordsOffset(BlockType blockType)
         {
+            Vector2i texCoordsIndex = new Vector2i();
+            if (BlockConfigs.TryGetValue(blockType, out BlockConfig? config))
+            {
+                texCoordsIndex = new Vector2i(config.TextureIndexRow, config.TextureIndexColumn);
+            }
+
             Vector2 texCoords = new Vector2()
             {
-                X = (float)TexCoordsIndexOfBlockType(type).Y / NumTexturesRow,
-                Y = -(float)TexCoordsIndexOfBlockType(type).X / NumTexturesColumn
+                X = (float)texCoordsIndex.Y / NumTexturesRow,
+                Y = -(float)texCoordsIndex.X / NumTexturesColumn
             };
-
             return texCoords;
         }
 
-        private static Vector2i TexCoordsIndexOfBlockType(BlockType blockType)
+        internal static BlockVisibility GetBlockVisibility(BlockType blockType)
         {
-            foreach ((BlockType, Vector2i) tuple in TextureIndex)
+            if (BlockConfigs.TryGetValue(blockType, out BlockConfig? config))
             {
-                if (tuple.Item1 == blockType)
-                {
-                    return tuple.Item2;
-                }
+                return config.BlockVisibility;
             }
-            return Vector2i.Zero;
+            return BlockVisibility.None;
+        }
+
+        internal static BlockShape GetBlockShape(BlockType blockType)
+        {
+            if (BlockConfigs.TryGetValue(blockType, out BlockConfig? config))
+            {
+                return config.BlockShape;
+            }
+            return BlockShape.None;
         }
 
         internal static void Init()
@@ -123,15 +148,30 @@ namespace Minecraft.WorldBuilding
             Texture = Texture.LoadFromFile("Resources/Textures.png");
             CalculateTexCoords();
 
-            TextureIndex.Add((BlockType.Dirt, new Vector2i(0, 0)));
-            TextureIndex.Add((BlockType.Grass, new Vector2i(0, 1)));
-            TextureIndex.Add((BlockType.Stone, new Vector2i(0, 2)));
-            TextureIndex.Add((BlockType.Sand, new Vector2i(0, 3)));
-            TextureIndex.Add((BlockType.Water, new Vector2i(0, 4)));
+            BlockConfig[]? blockConfigs;
+            using (Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Minecraft.WorldBuilding.BlockConfig.json"))
+            {
+                if (stream == null)
+                    throw new Exception("Failed loading BlockConfig.json");
+            
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    string json = reader.ReadToEnd();
+                    blockConfigs = JsonSerializer.Deserialize<BlockConfig[]?>(json);
+                }
+            }
 
-            TextureIndex.Add((BlockType.OakLeaves, new Vector2i(1, 0)));
-            TextureIndex.Add((BlockType.OakLog, new Vector2i(1, 2)));
-            TextureIndex.Add((BlockType.Cactus, new Vector2i(1, 1)));
+            if (blockConfigs != null)
+            {
+                foreach (BlockConfig blockConfig in blockConfigs)
+                {
+                    BlockConfigs.Add(blockConfig.BlockType, blockConfig);
+                }
+            }
+            else
+            {
+                throw new Exception("Failed loding BlockConfig.json");
+            }
         }
 
         private static void CalculateTexCoords()
@@ -281,6 +321,15 @@ namespace Minecraft.WorldBuilding
                 indicies = 31;
                 Vertices[indicies] = new Vertex { Position = Vertices[indicies].Position, Normal = Vertices[indicies].Normal, TexCoords = texCoords };
             }
+        }
+
+        private class BlockConfig
+        {
+            public BlockType BlockType { get; set; }
+            public BlockVisibility BlockVisibility { get; set; }
+            public BlockShape BlockShape { get; set; }
+            public int TextureIndexRow { get; set; }
+            public int TextureIndexColumn { get; set; }
         }
     }
 }

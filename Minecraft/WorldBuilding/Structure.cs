@@ -1,7 +1,8 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Minecraft.System;
+﻿using Minecraft.System;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using System.Management;
+using System;
+using System.Globalization;
 
 namespace Minecraft.WorldBuilding
 {
@@ -19,6 +20,7 @@ namespace Minecraft.WorldBuilding
         private static Dictionary<StructureType, List<BlockStruct>> StructureIndex = new Dictionary<StructureType, List<BlockStruct>>();
 
         private static Dictionary<Vector2i, List<BlockStruct>> ChunkColumnGhostBlocks = new Dictionary<Vector2i, List<BlockStruct>>();
+        private static Dictionary<Vector2i, List<Vector2i>> StructuresGenerated = new Dictionary<Vector2i, List<Vector2i>>();
 
         private static void InitStructureBlocks()
         {
@@ -125,6 +127,52 @@ namespace Minecraft.WorldBuilding
                 return blocks;
             }
             return new List<BlockStruct>();
+        }
+
+        internal static void AddVegetation(NoiseMap vegetation, ref Dictionary<Vector3i, BlockType> blocks, int[,] height, Vector2i chunkColumnPosition)
+        {
+            int xChunk = chunkColumnPosition.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+            int yChunk = chunkColumnPosition.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+            float[,] vegetationData = vegetation.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+
+            List<((int, int), float)> vegetationDataList = new List<((int, int), float)>();
+            for (int i = 0; i < ChunkColumn.ChunkSize; i++)
+            {
+                for (int j = 0; j < ChunkColumn.ChunkSize; j++)
+                {
+                    vegetationDataList.Add(((i, j), vegetationData[i, j]));
+                }
+            }
+
+            int numStructures = (int)(vegetationData.Average() * ((ChunkColumn.ChunkSize * ChunkColumn.ChunkSize) / (5f * 5f)) / 2f);
+
+
+            // Generate structures
+            for (int i = 0; i < numStructures; i++)
+            {
+                vegetationDataList.Sort((item1, item2) =>
+                {
+                    if (item1.Item2 < item2.Item2)
+                        return -1;
+                    if (item1.Item2 == item2.Item2)
+                        return 0;
+                    return 1;
+                });
+
+                (int X, int Y) index = vegetationDataList[0].Item1;
+
+                Vector3i position = new Vector3i(index.Item1, height[index.Item1, index.Item2], index.Item2);
+                AddStructure(ref blocks, StructureType.OakTree, position, chunkColumnPosition);
+
+                Func<((int X, int Y), float Value), bool> remover = (item) =>
+                {
+                    if (Math.Abs(item.Item1.X - index.X) < 2 && Math.Abs(item.Item1.Y - index.Y) < 2)
+                        return false;
+                    return true;
+                };
+                IEnumerable<((int, int), float)> list = vegetationDataList.Where(remover);
+                vegetationDataList = list.ToList();
+            }
         }
 
         internal static void AddStructure(ref Dictionary<Vector3i, BlockType> blocks, StructureType structureType, Vector3i position, Vector2i chunkColumnPosition)

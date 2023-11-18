@@ -1,5 +1,4 @@
-﻿using Microsoft.Diagnostics.Tracing.Parsers.JScript;
-using Minecraft.Entitys;
+﻿using Minecraft.Entitys;
 using Minecraft.System;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -28,7 +27,7 @@ namespace Minecraft.WorldBuilding
 
         internal static int SpawnChunkSize { get; set; } = 1;
 
-        internal static float TicksPerSecond { get; set; } = 200f;
+        internal static float TicksPerSecond { get; set; } = 500f;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static readonly Func<KeyValuePair<Vector2i, ChunkColumn>, bool> keyRemoverDictionaryByDistance = chunk =>
@@ -99,6 +98,7 @@ namespace Minecraft.WorldBuilding
                     ActionManager.InvokeActions(ActionManager.Thread.ChunkManager);
 
                     ChunksWaitingToGenerate.Clear();
+                    ChunksWaitingToUnload.Clear();
 
                     ChunksWaitingToBakeDictionary = ChunksWaitingToBake.Distinct().ToDictionary(chunk => chunk.Position);
                     ChunksWaitingToUnloadDictionary = ChunksWaitingToUnload.ToDictionary(chunk => chunk.Position);
@@ -109,7 +109,7 @@ namespace Minecraft.WorldBuilding
                     {
                         if (!ChunkManagerContainsChunk(position))
                         {
-                            ChunksWaitingToGenerate.Enqueue(position, GetDistanceFromPlayer(position));
+                            ChunksWaitingToGenerate.Enqueue(position, GetDistanceFromPlayer(position * ChunkColumn.ChunkSize));
                         }
                     }
 
@@ -151,19 +151,22 @@ namespace Minecraft.WorldBuilding
 
                         case ChunkLoadingSteps.Bake:
 
-                            if (ChunksWaitingToBake.Count != 0)
+                            for (int i = 0; i < 2; i++)
                             {
-                                ChunkColumn chunkBaked;
-                                do
+                                if (ChunksWaitingToBake.Count != 0)
                                 {
-                                    chunkBaked = ChunksWaitingToBake.Dequeue();
-                                    chunkBaked.IsBaking = true;
-                                }
-                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+                                    ChunkColumn chunkBaked;
+                                    do
+                                    {
+                                        chunkBaked = ChunksWaitingToBake.Dequeue();
+                                        chunkBaked.IsBaking = true;
+                                    }
+                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
-                                if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
-                                {
-                                    BakeChunk(chunkBaked);
+                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                    {
+                                        BakeChunk(chunkBaked);
+                                    }
                                 }
                             }
 
@@ -264,7 +267,7 @@ namespace Minecraft.WorldBuilding
         private static List<ChunkColumn> FindNeighbors(ChunkColumn chunk)
         {
             List<ChunkColumn> chunksList = new List<ChunkColumn>();
-            ChunkColumn chunkBuffer;
+            ChunkColumn? chunkBuffer;
 
             if (ChunksLoaded.TryGetValue(new Vector2i(-1, 0) + chunk.Position, out chunkBuffer))
                 chunksList.Add(chunkBuffer);
@@ -281,7 +284,7 @@ namespace Minecraft.WorldBuilding
         private static List<ChunkColumn> FindNeighborsBaked(ChunkColumn chunk)
         {
             List<ChunkColumn> chunksList = new List<ChunkColumn>();
-            ChunkColumn chunkBuffer;
+            ChunkColumn? chunkBuffer;
 
             if (ChunksLoaded.TryGetValue(new Vector2i(-1, 0) + chunk.Position, out chunkBuffer))
             {

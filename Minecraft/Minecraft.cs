@@ -11,7 +11,6 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Minecraft.System;
 using System.Collections.Generic;
-using BenchmarkDotNet.Running;
 
 namespace Minecraft
 {
@@ -32,7 +31,7 @@ namespace Minecraft
         {
             Block.Init();
             ChunkManager.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 67 };
         }
 
         protected override Camera OnCreateCamera()

@@ -1,5 +1,7 @@
 ﻿using Minecraft.WorldBuilding;
 using OpenTK.Mathematics;
+using System.Reflection;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace Minecraft.System
 {
@@ -28,6 +30,57 @@ namespace Minecraft.System
             }
 
             return mergedDictionary;
+        }
+
+        internal static float Average(this float[,] values)
+        {
+            if (values == null)
+                return 0;
+
+            float sum = 0;
+            for (int i = 0; i < values.GetLength(0); i++)
+            {
+                for (int j = 0; j < values.GetLength(1); j++)
+                {
+                    sum += values[i, j];
+                }
+            }
+
+            return sum / values.Length;
+        }
+
+        internal static (int, int) IndexOfLargest(this float[,] values)
+        {
+            float largest = 0;
+            (int, int) index = (0, 0);
+            for (int i = 0; i < values.GetLength(0); i++)
+            {
+                for (int j = 0; j < values.GetLength(1); j++)
+                {
+                    if (largest < values[i, j])
+                    {
+                        largest = values[i, j];
+                        index = (i, j);
+                    }
+                }
+            }
+            return index;
+        }
+
+        internal static T[] FlattenArray<T>(this T[,] array)
+        {
+            // Get the total number of elements in the 2D array
+            int totalElements = array.Length;
+
+            // Use LINQ to flatten the 2D array into a 1D array
+            T[] flattenedArray = new T[totalElements];
+            var query = from T element in array
+                        select element;
+
+            // Copy the elements to the flattened array
+            Array.Copy(query.ToArray(), flattenedArray, totalElements);
+
+            return flattenedArray;
         }
         #endregion
 

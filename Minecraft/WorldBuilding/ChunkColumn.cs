@@ -11,7 +11,7 @@ namespace Minecraft.WorldBuilding
         [DataMember]
         internal Vector2i Position { get; private set; }
         internal static int ChunkSize { get; } = 16;
-        internal static int Height { get; } = 256;
+        internal static int Height { get; } = 512;
 
         [DataMember]
         internal List<BlockStruct> BlocksChanged { get; private set; } = new List<BlockStruct>();
@@ -228,9 +228,20 @@ namespace Minecraft.WorldBuilding
 
             if (!IsOutOfRange(position))
             {
-                if (this.GetBlockType(position) != BlockType.Air)
+                blockType = this.GetBlockType(position);
+                if (Block.GetBlockVisibility(block.Type) == BlockVisibility.Opaque)
                 {
-                    return true;
+                    if (Block.GetBlockVisibility(blockType) != BlockVisibility.Transparent)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if ((Block.GetBlockVisibility(blockType) == BlockVisibility.Transparent && blockType != BlockType.Air) || Block.GetBlockVisibility(blockType) == BlockVisibility.Opaque)
+                    {
+                        return true;
+                    }
                 }
             }
             else
@@ -241,9 +252,20 @@ namespace Minecraft.WorldBuilding
 
                     if (index != -1)
                     {
-                        if (neighborChunks[index].GetBlockType(new Vector3i(ChunkSize - 1, position.Y, position.Z)) != BlockType.Air)
+                        blockType = neighborChunks[index].GetBlockType(new Vector3i(ChunkSize - 1, position.Y, position.Z));
+                        if (Block.GetBlockVisibility(block.Type) == BlockVisibility.Opaque)
                         {
-                            return true;
+                            if (Block.GetBlockVisibility(blockType) != BlockVisibility.Transparent)
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            if ((Block.GetBlockVisibility(blockType) == BlockVisibility.Transparent && blockType != BlockType.Air) || Block.GetBlockVisibility(blockType) == BlockVisibility.Opaque)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -252,20 +274,43 @@ namespace Minecraft.WorldBuilding
                     int index = neighborChunks.IndexOf(new Vector2i(1, 0) + this.Position);
                     if (index != -1)
                     {
-                        if (neighborChunks[index].GetBlockType(new Vector3i(0, position.Y, position.Z)) != BlockType.Air)
+                        blockType = neighborChunks[index].GetBlockType(new Vector3i(0, position.Y, position.Z));
+                        if (Block.GetBlockVisibility(block.Type) == BlockVisibility.Opaque)
                         {
-                            return true;
+                            if (Block.GetBlockVisibility(blockType) != BlockVisibility.Transparent)
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            if ((Block.GetBlockVisibility(blockType) == BlockVisibility.Transparent && blockType != BlockType.Air) || Block.GetBlockVisibility(blockType) == BlockVisibility.Opaque)
+                            {
+                                return true;
+                            }
                         }
                     }
+
                 }
                 else if (offset.Z == -1)
                 {
                     int index = neighborChunks.IndexOf(new Vector2i(0, -1) + this.Position);
                     if (index != -1)
                     {
-                        if (neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, ChunkSize - 1)) != BlockType.Air)
+                        blockType = neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, ChunkSize - 1));
+                        if (Block.GetBlockVisibility(block.Type) == BlockVisibility.Opaque)
                         {
-                            return true;
+                            if (Block.GetBlockVisibility(blockType) != BlockVisibility.Transparent)
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            if ((Block.GetBlockVisibility(blockType) == BlockVisibility.Transparent && blockType != BlockType.Air) || Block.GetBlockVisibility(blockType) == BlockVisibility.Opaque)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -274,9 +319,20 @@ namespace Minecraft.WorldBuilding
                     int index = neighborChunks.IndexOf(new Vector2i(0, 1) + this.Position);
                     if (index != -1)
                     {
-                        if (neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, 0)) != BlockType.Air)
+                        blockType = neighborChunks[index].GetBlockType(new Vector3i(position.X, position.Y, 0));
+                        if (Block.GetBlockVisibility(block.Type) == BlockVisibility.Opaque)
                         {
-                            return true;
+                            if (Block.GetBlockVisibility(blockType) != BlockVisibility.Transparent)
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            if ((Block.GetBlockVisibility(blockType) == BlockVisibility.Transparent && blockType != BlockType.Air) || Block.GetBlockVisibility(blockType) == BlockVisibility.Opaque)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }

@@ -9,16 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\BlockConfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="WorldBuilding\BlockConfig.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GameEngine\GameEngine.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Shaders\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.10" />
-    <PackageReference Include="ImGui.NET" Version="1.89.9.2" />
   </ItemGroup>
 
   <ItemGroup>
