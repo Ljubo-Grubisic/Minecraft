@@ -1,5 +1,6 @@
 ﻿using Minecraft.WorldBuilding;
 using OpenTK.Mathematics;
+using System.Collections.Generic;
 using System.Reflection;
 using static OpenTK.Graphics.OpenGL.GL;
 
@@ -81,6 +82,24 @@ namespace Minecraft.System
             Array.Copy(query.ToArray(), flattenedArray, totalElements);
 
             return flattenedArray;
+        }
+
+        internal static List<T> Remove<T>(this List<T> values, Func<T, bool> function)
+        {
+            List<int> indicies = new List<int>();
+            for (int i = 0; i < values.Count; i++)
+            {
+                bool remove = function.Invoke(values[i]);
+                if (remove) 
+                    indicies.Add(i);
+            }
+
+            indicies.Sort();
+            for (int i = indicies.Count - 1; i >= 0; i--)
+            {
+                values.RemoveAt(indicies[i]);
+            }
+            return values;
         }
         #endregion
 
@@ -213,6 +232,40 @@ namespace Minecraft.System
                     return vector2s[lastIndexLesser];
             }
             return new Vector2(1, 1);
+        }
+
+        internal static List<(TKey, TValue)> ConvertKeyValuePairToTuple<TKey, TValue>(this List<KeyValuePair<TKey, TValue>> keyValuePairs)
+        {
+            List<(TKey, TValue)> result = new List<(TKey, TValue)>();
+            for (int i = 0; i < keyValuePairs.Count; i++)
+            {
+                result.Add((keyValuePairs[i].Key, keyValuePairs[i].Value));
+            }
+            return result;
+        }
+
+        internal static Dictionary<TKey, TValue> RemoveDoubleKeys<TKey, TValue>(this Dictionary<TKey, (TKey, TValue)> dictionary)
+        {
+            Dictionary<TKey, TValue> result = new Dictionary<TKey, TValue>();
+
+            for (int i = 0; i < dictionary.Count; i++)
+            {
+                result.Add(dictionary.Values.ToArray()[i].Item1, dictionary.Values.ToArray()[i].Item2);
+            }
+
+            return result;
+        }
+
+        internal static Dictionary<TKey, TValue> RemoveDoubleKeys<TKey, TValue>(this Dictionary<TKey, KeyValuePair<TKey, TValue>> dictionary)
+        {
+            Dictionary<TKey, TValue> result = new Dictionary<TKey, TValue>();
+
+            for (int i = 0; i < dictionary.Count; i++)
+            {
+                result.Add(dictionary.Values.ToArray()[i].Key, dictionary.Values.ToArray()[i].Value);
+            }
+
+            return result;
         }
         #endregion
 

@@ -12,13 +12,13 @@ namespace Minecraft.WorldBuilding
         static WorldGenerator()
         {
             (double, double) A = (0.0646594264678, 0.0421697707709);
-            (double, double) B = (0.283233143763, 0.1087974541487);
-            (double, double) C = (0.3906450253915, 0.4187071454047);
-            (double, double) D = (0.600186237093, 0.5384449806626);
-            (double, double) E = (0.9222279475671, 0.7992709253526);
-            (double, double) F = (0.956080880054, 0.8869656363544);
-            (double, double) G = (0.748097680647, 0.6881172747351);
-            (double, double) H = (0.9854988186345, 0.9658057117503);
+            (double, double) B = (0.2925936785793, 0.0817570248029);
+            (double, double) C = (0.5212511866198, 0.1602858659481);
+            (double, double) D = (0.694476571499, 0.3127242046418);
+            (double, double) E = (0.9346824385314, 0.6637943179969);
+            (double, double) F = (0.9716371873056, 0.8855228106422);
+            (double, double) G = (0.8653922845797, 0.4097304201741);
+            (double, double) H = (0.9947339052895, 0.9732903389809);
 
             Continentalness = new NoiseMap(Seed, 0.0012f, FastNoiseLite.NoiseType.OpenSimplex2);
             Continentalness.CreateSpline(new Vector2((float)A.Item1, (float)A.Item2));
@@ -65,18 +65,8 @@ namespace Minecraft.WorldBuilding
                 }
             }
 
-            Random random = new Random();
-            int randomX = random.Next(0, ChunkColumn.ChunkSize);
-            int randomZ = random.Next(0, ChunkColumn.ChunkSize);
-            randomX = 0;
-            randomZ = 0;
-
-            Structure.AddVegetation(Vegetation, ref blocks, height, chunk.Position);
+            Structure.AddVegetation(Vegetation, ref blocks, height, waterLevel, chunk.Position);
             Structure.AddGhostBlocks(ref blocks, chunk.Position);
-            //if (height[randomX, randomZ] > waterLevel)
-            //    Structure.AddStructure(ref blocks, StructureType.OakTree, new Vector3i(randomX, height[randomX, randomZ] + 1, randomZ), chunk.Position);
-            //
-            //Structure.AddGhostBlocks(ref blocks, chunk.Position);
 
             return blocks;
         }

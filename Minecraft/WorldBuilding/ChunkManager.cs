@@ -27,7 +27,7 @@ namespace Minecraft.WorldBuilding
 
         internal static int SpawnChunkSize { get; set; } = 1;
 
-        internal static float TicksPerSecond { get; set; } = 500f;
+        internal static float TicksPerSecond { get; set; } = 300f;
         internal static float TimeUntilUpdate = 1.0f / TicksPerSecond;
 
         private static readonly Func<KeyValuePair<Vector2i, ChunkColumn>, bool> keyRemoverDictionaryByDistance = chunk =>

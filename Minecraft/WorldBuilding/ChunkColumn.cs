@@ -50,6 +50,8 @@ namespace Minecraft.WorldBuilding
         {
             this.IsUnloaded = true;
             SaveManager.SaveChunk(this);
+            Structure.ChunkIsUnloading();
+
             if (Mesh != null)
             {
                 ActionManager.QueueAction(ActionManager.Thread.Main, () => this.Mesh.Dispose());
