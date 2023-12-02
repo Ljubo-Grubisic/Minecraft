@@ -1,6 +1,5 @@
 ﻿using Minecraft.WorldBuilding;
 using OpenTK.Mathematics;
-using System.IO;
 using System.Runtime.Serialization;
 
 namespace Minecraft.System
@@ -22,25 +21,50 @@ namespace Minecraft.System
             }
         }
 
+        internal static Dictionary<Vector3i, BlockType> LoadChunk(Vector2i position)
+        {
+            bool isFileEmpty = false;
+
+            StreamReader reader = new StreamReader(File.OpenRead(SaveDirectory + "/chunks.xml"));
+
+            if (reader.BaseStream.Length == 0)
+                isFileEmpty = true;
+
+            reader.Dispose();
+
+            if (!isFileEmpty)
+            {
+                DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<Vector2i, ChunkColumn>));
+
+                Dictionary<Vector2i, ChunkColumn>? columns = new Dictionary<Vector2i, ChunkColumn>();
+
+                Stream stream = File.OpenRead(SaveDirectory + "/chunks.xml");
+                columns = (Dictionary<Vector2i, ChunkColumn>?)serializer.ReadObject(stream);
+                stream.Dispose();
+
+                if (columns != null)
+                {
+                    if (columns.TryGetValue(position, out ChunkColumn? column))
+                        return column.BlocksChanged;
+                    else
+                        return new Dictionary<Vector3i, BlockType>();
+                }
+            }
+            return new Dictionary<Vector3i, BlockType>();
+        }
+
         internal static void SaveChunk(ChunkColumn chunk)
         {
             DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<Vector2i, ChunkColumn>));
 
             Dictionary<Vector2i, ChunkColumn>? columns = new Dictionary<Vector2i, ChunkColumn>();
 
-            bool isFileEmpty = false;
-            using (Stream stream = File.OpenRead(SaveDirectory + "/chunks.xml"))
-            {
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    Span<char> text = new Span<char>();
-                    if (reader.Read(text) == 0)
-                        isFileEmpty = true;
-                }
+            Stream streamReader = File.OpenRead(SaveDirectory + "/chunks.xml");
 
-                if (!isFileEmpty)
-                    columns = (Dictionary<Vector2i, ChunkColumn>?)serializer.ReadObject(stream);
-            }
+            if (streamReader.Length > 0)
+                columns = (Dictionary<Vector2i, ChunkColumn>?)serializer.ReadObject(streamReader);
+
+            streamReader.Dispose();
 
             if (chunk.BlocksChanged.Count > 0)
             {
@@ -56,46 +80,13 @@ namespace Minecraft.System
                         columns.Add(chunk.Position, chunk);
                     }
                 }
-                using (Stream stream = File.OpenWrite(SaveDirectory + "/chunks.xml"))
-                {
-                    serializer.WriteObject(stream, columns);
-                }
+
+                Stream streamWriter = File.OpenWrite(SaveDirectory + "/chunks.xml");
+
+                serializer.WriteObject(streamWriter, columns);
+
+                streamWriter.Dispose();
             }
-        }
-
-        internal static List<BlockStruct> LoadChunk(Vector2i position)
-        {
-            bool isFileEmpty = false;
-            using (StreamReader reader = new StreamReader(File.OpenRead(SaveDirectory + "/chunks.xml")))
-            {
-                Span<char> text = new Span<char>();
-                if (reader.Read(text) == 0)
-                    isFileEmpty = true;
-            }
-
-            if (!isFileEmpty)
-            {
-                DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<Vector2i, ChunkColumn>));
-
-                Dictionary<Vector2i, ChunkColumn>? columns = new Dictionary<Vector2i, ChunkColumn>();
-                using (Stream stream = File.OpenRead(SaveDirectory + "/chunks.xml"))
-                {
-                    columns = (Dictionary<Vector2i, ChunkColumn>?)serializer.ReadObject(stream);
-                }
-
-                if (columns != null)
-                {
-                    if (columns.TryGetValue(position, out ChunkColumn column))
-                        return column.BlocksChanged;
-                    else
-                        return new List<BlockStruct>();
-                }
-            }
-            return new List<BlockStruct>();
-        }
-
-        internal static void AddBlocksToChunkSave(List<BlockStruct> blocks, Vector2i position)
-        {
         }
     }
 }

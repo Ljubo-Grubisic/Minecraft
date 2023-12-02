@@ -48,6 +48,11 @@ namespace Minecraft.WorldBuilding
         internal Vector3i Position;
         [DataMember]
         internal BlockType Type;
+
+        public override string ToString()
+        {
+            return "Position: " + this.Position + "Type: " + this.Type;
+        }
     }
 
     internal static class Block

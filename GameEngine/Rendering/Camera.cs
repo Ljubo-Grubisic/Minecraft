@@ -26,9 +26,9 @@ namespace GameEngine.Rendering
         /// </summary>
         private float zoom;
 
-        internal Vector3 Front { get; private set; } = -Vector3.UnitZ;
-        internal Vector3 Up { get; private set; } = Vector3.UnitY;
-        internal Vector3 Right { get; private set; }
+        public Vector3 Front { get; private set; } = -Vector3.UnitZ;
+        public Vector3 Up { get; private set; } = Vector3.UnitY;
+        public Vector3 Right { get; private set; }
 
         /// <summary>
         /// In radians

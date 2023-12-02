@@ -1,6 +1,7 @@
 ﻿using GameEngine.ModelLoading;
 using Minecraft.System;
 using OpenTK.Mathematics;
+using System.Collections.Immutable;
 using System.Runtime.Serialization;
 
 namespace Minecraft.WorldBuilding
@@ -11,14 +12,15 @@ namespace Minecraft.WorldBuilding
         [DataMember]
         internal Vector2i Position { get; private set; }
         internal static int ChunkSize { get; } = 16;
-        internal static int Height { get; } = 512;
+        internal static int Height { get; } = 320;
 
         [DataMember]
-        internal List<BlockStruct> BlocksChanged { get; private set; } = new List<BlockStruct>();
-        private Dictionary<Vector3i, BlockType> Blocks = new Dictionary<Vector3i, BlockType>();
-        private Dictionary<int, BlockType> Layers = new Dictionary<int, BlockType>();
+        internal Dictionary<Vector3i, BlockType> BlocksChanged { get; private set; } = new Dictionary<Vector3i, BlockType>();
+        private Dictionary<Vector3i, BlockType> BlockTypes = new Dictionary<Vector3i, BlockType>();
+        private Dictionary<int, BlockType> LayerTypes = new Dictionary<int, BlockType>();
+        private Dictionary<int, BlockType> ChunkTypes = new Dictionary<int, BlockType>();
 
-        internal Mesh Mesh { get; private set; }
+        internal Mesh? Mesh { get; private set; }
 
         internal bool IsUnloaded { get; private set; } = false;
         internal bool IsBaking { get; set; } = false;
@@ -33,24 +35,34 @@ namespace Minecraft.WorldBuilding
         internal BlockType GetBlockType(Vector3i position)
         {
             BlockType blockType;
-            if (Blocks.TryGetValue(position, out blockType))
+            if (BlockTypes.TryGetValue(position, out blockType))
                 return blockType;
-            else if (Layers.TryGetValue(position.Y, out blockType))
+            else if (LayerTypes.TryGetValue(position.Y, out blockType))
+                return blockType;
+            else if (ChunkTypes.TryGetValue(position.Y / ChunkSize, out blockType))
                 return blockType;
             else
                 throw new IndexOutOfRangeException("Index out of range");
         }
 
-        internal void ChangeBlockType(BlockStruct blockStruct)
+        internal void ChangeBlockType(BlockStruct blockStruct, bool save)
         {
-            Blocks[blockStruct.Position] = blockStruct.Type;
+            BlockTypes[blockStruct.Position] = blockStruct.Type;
+            if (save)
+            {
+                if (BlocksChanged.ContainsKey(blockStruct.Position))
+                {
+                    BlocksChanged.Remove(blockStruct.Position);
+                }
+                BlocksChanged.Add(blockStruct.Position, blockStruct.Type);
+            }
         }
 
         internal void Unload()
         {
             this.IsUnloaded = true;
             SaveManager.SaveChunk(this);
-            Structure.ChunkIsUnloading();
+            Structure.UnloadChunk();
 
             if (Mesh != null)
             {
@@ -164,23 +176,24 @@ namespace Minecraft.WorldBuilding
         #region Private
         private void Generate()
         {
-            this.Blocks = WorldGenerator.GenerateChunk(this);
+            this.BlockTypes = WorldGenerator.GenerateChunk(this);
 
-            List<BlockStruct> blocksChanged = SaveManager.LoadChunk(Position);
+            Dictionary<Vector3i, BlockType> blocksChanged = SaveManager.LoadChunk(Position);
             this.BlocksChanged = blocksChanged;
 
-            foreach (BlockStruct block in this.BlocksChanged)
+            KeyValuePair<Vector3i, BlockType>[] array = this.BlocksChanged.ToArray();
+            for (int i = 0; i < array.Count(); i++)
             {
-                this.Blocks[block.Position] = block.Type;
+                this.BlockTypes[array[i].Key] = array[i].Value;
             }
 
             OptimizeBlocksToLayers();
         }
 
-        public void OptimizeBlocksToLayers()
+        private void OptimizeBlocksToLayers()
         {
             Vector3i index = new Vector3i();
-            BlockType blockType = new BlockType();
+            BlockType firstBlockType = new BlockType();
             for (int y = 0; y < Height; y++)
             {
                 bool firstBlock = true;
@@ -193,19 +206,20 @@ namespace Minecraft.WorldBuilding
                         index.X = x; index.Y = y; index.Z = z;
                         if (firstBlock)
                         {
-                            blockType = Blocks[index];
+                            firstBlockType = BlockTypes[index];
                             firstBlock = false;
                         }
-                        if (blockType != Blocks[index])
+                        if (firstBlockType != BlockTypes[index])
                         {
                             isLayerSame = false;
+                            break;
                         }
                     }
                 }
 
                 if (isLayerSame)
                 {
-                    this.Layers.Add(y, blockType);
+                    this.LayerTypes.Add(y, firstBlockType);
 
                     for (int x = 0; x < ChunkSize; x++)
                     {
@@ -213,14 +227,62 @@ namespace Minecraft.WorldBuilding
                         {
                             index.X = x; index.Y = y; index.Z = z;
 
-                            this.Blocks.Remove(index);
+                            this.BlockTypes.Remove(index);
                         }
                     }
                 }
             }
 
-            this.Blocks.TrimExcess();
-            this.Layers.TrimExcess();
+            BlockType blockType;
+            for (int i = 0; i < Height / ChunkSize; i++)
+            {
+                bool firstLayer = true;
+                bool isChunkSame = true;
+            
+                for (int y = 0; y < ChunkSize; y++)
+                {
+                    if (firstLayer)
+                    {
+                        if (LayerTypes.TryGetValue(i * ChunkSize, out blockType))
+                        {
+                            firstBlockType = blockType;
+                            firstLayer = false;
+                        }
+                        else
+                        {
+                            isChunkSame = false;
+                            break;
+                        } 
+                    }
+                    if (LayerTypes.TryGetValue(i * ChunkSize + y, out blockType))
+                    {
+                        if (firstBlockType != blockType)
+                        {
+                            isChunkSame = false;
+                            break;  
+                        }
+                    }
+                    else
+                    {
+                        isChunkSame = false;
+                        break;
+                    }
+                }
+            
+                if (isChunkSame)
+                {
+                    this.ChunkTypes.Add(i, firstBlockType);
+            
+                    for (int y = 0; y < ChunkSize; y++)
+                    {
+                        this.LayerTypes.Remove(i * ChunkSize + y);
+                    }
+                }
+            }
+
+            this.BlockTypes.TrimExcess();
+            this.LayerTypes.TrimExcess();
+            this.ChunkTypes.TrimExcess();
         }
 
         private bool IsBlockSideCovered(BlockStruct block, Vector3i offset, List<ChunkColumn> neighborChunks)

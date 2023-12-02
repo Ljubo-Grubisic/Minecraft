@@ -21,6 +21,7 @@ namespace GameEngine.MainLooping
             GL.Enable(EnableCap.DepthTest);
             this.CursorState = CursorState.Grabbed;
             KeyboardManager.Init(this);
+            MouseManager.Init(this);
 
             OnInit();
             this.Camera = OnCreateCamera();

@@ -23,17 +23,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Shaders\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="Resources\Textures.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Resources\TexturesNum.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Shaders\fragment_shaderHUD.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Shaders\fragment_shader.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\vertex_shaderHUD.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Shaders\vertex_shader.glsl">

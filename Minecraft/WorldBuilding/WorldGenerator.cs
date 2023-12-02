@@ -37,7 +37,7 @@ namespace Minecraft.WorldBuilding
         {
             int xChunk = chunk.Position.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
             int yChunk = chunk.Position.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
-            int waterLevel = 100;
+            int waterLevel = 50;
             float[,] mapedData = Continentalness.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
             int[,] height = Continentalness.ConvertMapedDataToIntScale(mapedData, 0, ChunkColumn.Height);
             Dictionary<Vector3i, BlockType> blocks = new Dictionary<Vector3i, BlockType>();

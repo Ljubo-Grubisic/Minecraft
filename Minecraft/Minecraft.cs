@@ -16,8 +16,9 @@ namespace Minecraft
 {
     public class Minecraft : Game
     {
-        internal Shader Shader { get; set; }
-        internal Player Player { get; set; }
+        internal Shader Shader { get; private set; }
+        internal Shader HudShader { get; private set; }
+        internal Player Player { get; private set; }
 
         private bool WireFrameMode = false;
 
@@ -26,28 +27,29 @@ namespace Minecraft
 
         }
 
-
         protected override void OnInit()
         {
             Block.Init();
             ChunkManager.Init();
-            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 47 };
+            Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
         }
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 50.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 100f };
+            return new Camera(new Vector3(0, 150.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 25f };
         }
 
         protected override void OnLoadShaders()
         {
             Shader = new Shader("Shaders/vertex_shader.glsl", "Shaders/fragment_shader.glsl");
+            HudShader = new Shader("Shaders/vertex_shaderHUD.glsl", "Shaders/fragment_shaderHUD.glsl");
         }
         protected override void OnLoadTextures()
         {
         }
         protected override void OnLoadModels()
         {
+            
         }
 
         protected override void OnUpdate(FrameEventArgs args)
@@ -92,7 +94,7 @@ namespace Minecraft
                     {
                         GL.BindVertexArray(chunk.Mesh.VAO);
 
-                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * ChunkColumn.ChunkSize, 0.0f, chunk.Position.Y * ChunkColumn.ChunkSize)));
+                        Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * ChunkColumn.ChunkSize, (ChunkColumn.Height / 2), chunk.Position.Y * ChunkColumn.ChunkSize)));
 
                         GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
 
@@ -103,6 +105,12 @@ namespace Minecraft
                 }
             }
 
+        }
+
+        protected override void OnUnload()
+        {
+            base.OnUnload();
+            ChunkManager.Unload();
         }
 
         protected override void OnWindowResize(ResizeEventArgs args)
