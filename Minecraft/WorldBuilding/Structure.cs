@@ -1,5 +1,9 @@
-﻿using Minecraft.System;
+﻿using Minecraft.Entitys;
+using Minecraft.System;
 using OpenTK.Mathematics;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json;
 
 namespace Minecraft.WorldBuilding
 {
@@ -11,35 +15,28 @@ namespace Minecraft.WorldBuilding
 
     internal static class Structure
     {
-        private static List<BlockStruct> OakTreeBlocks = new List<BlockStruct>();
-        private static List<BlockStruct> CactusBlocks = new List<BlockStruct>();
-
-        private static Dictionary<StructureType, List<BlockStruct>> StructureIndex = new Dictionary<StructureType, List<BlockStruct>>();
+        private static Dictionary<StructureType, List<StructureSave>> StructureSaves = new Dictionary<StructureType, List<StructureSave>>();
 
         private static Dictionary<Vector2i, List<BlockStruct>> ChunkColumnGhostBlocks = new Dictionary<Vector2i, List<BlockStruct>>();
         private static Dictionary<Vector2i, List<Vector2i>> StructuresGenerated = new Dictionary<Vector2i, List<Vector2i>>();
 
+        private static NoiseMap Random;
+
         static Structure()
         {
             InitStructureBlocks();
-            StructureIndex.Add(StructureType.OakTree, OakTreeBlocks);
-            StructureIndex.Add(StructureType.Cactus, CactusBlocks);
-        }
-
-        internal static List<BlockStruct> GetBlocksByStructure(StructureType structureType)
-        {
-            if (StructureIndex.TryGetValue(structureType, out List<BlockStruct>? blocks))
-            {
-                return blocks;
-            }
-            return new List<BlockStruct>();
+            Random = new NoiseMap(WorldGenerator.Seed, 0.25f, FastNoiseLite.NoiseType.OpenSimplex2);
+            Player.PlayerChangeBlock += Player_PlayerChangeBlock;
         }
 
         internal static void AddVegetation(NoiseMap vegetation, ref Dictionary<Vector3i, BlockType> blocks, int[,] height, int waterLevel, Vector2i chunkColumnPosition)
         {
             int xChunk = chunkColumnPosition.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
             int yChunk = chunkColumnPosition.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
-            float[,] vegetationData = vegetation.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+
+            int vegetationData = vegetation.ConvertMapedValueToIntScale(vegetation.GetMapedNoiseValue(xChunk, yChunk), 0, 4);
+            float[,] randomData = Random.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+
             int spacingBetweenStructures = 6;
 
             List<(Vector2i, float)> vegetationDataList = new List<(Vector2i, float)>();
@@ -48,18 +45,18 @@ namespace Minecraft.WorldBuilding
                 for (int j = 0; j < ChunkColumn.ChunkSize; j++)
                 {
                     if (height[i, j] > waterLevel)
-                        vegetationDataList.Add((new Vector2i(i, j), vegetationData[i, j]));
+                        vegetationDataList.Add((new Vector2i(i, j), randomData[i, j]));
                 }
             }
 
-            int numStructures = (int)(vegetationData.Average() * ((ChunkColumn.ChunkSize * ChunkColumn.ChunkSize) / (5f * 5f)) / 2f);
+            int numStructures = vegetationData;
 
             // Remove spaces that are ocupied by structures in outher chunks
             List<Vector2i>? positions = new List<Vector2i>();
             List<Vector2i> allStructurePositions = new List<Vector2i>();
-            for (int i = -1; i < 2; i++)
+            for (int i = -2; i < 3; i++)
             {
-                for (int j = -1; j < 2; j++)
+                for (int j = -2; j < 3; j++)
                 {
                     if (!(i == 0 && j == 0))
                     {
@@ -82,8 +79,8 @@ namespace Minecraft.WorldBuilding
             {
                 for (int j = 0; j < allStructurePositions.Count; j++)
                 {
-                    if (Math.Abs(value.Item1.X - allStructurePositions[j].X) < spacingBetweenStructures 
-                    && Math.Abs(value.Item1.Y - allStructurePositions[j].Y) < spacingBetweenStructures)
+                    if (Math.Abs(value.Item1.X - allStructurePositions[j].X) <= spacingBetweenStructures
+                    && Math.Abs(value.Item1.Y - allStructurePositions[j].Y) <= spacingBetweenStructures)
                         return true;
                 }
                 return false;
@@ -136,7 +133,7 @@ namespace Minecraft.WorldBuilding
                     StructuresGenerated.Add(chunkColumnPosition, validStructurePositions);
             }
         }
-
+    
         internal static void UnloadChunk()
         {
             List<KeyValuePair<Vector2i, List<BlockStruct>>> chunkColumnGhostBlocksList = ChunkColumnGhostBlocks.ToList();
@@ -214,9 +211,35 @@ namespace Minecraft.WorldBuilding
             return values;
         }
 
+        private static int GetNumListsStructType(StructureType structureType)
+        {
+            if (StructureSaves.TryGetValue(structureType, out List<StructureSave>? blocks))
+            {
+                return blocks.Count;
+            }
+            return -1;
+        }
+
+        private static List<BlockStruct> GetBlocksByStructure(StructureType structureType, int index)
+        {
+            if (StructureSaves.TryGetValue(structureType, out List<StructureSave>? blocks))
+            {
+                return blocks[index].Blocks;
+            }
+            return new List<BlockStruct>();
+        }
+
         private static void AddStructure(ref Dictionary<Vector3i, BlockType> blocks, StructureType structureType, Vector3i strucuturePosition, Vector2i chunkColumnPosition)
         {
-            List<BlockStruct> structureBlocks = GetBlocksByStructure(structureType);
+            int numLists = GetNumListsStructType(structureType);
+            if (numLists == -1)
+                throw new Exception("Invalid structure type, this structure type has no block lists or isnt loaded");
+
+            int index = Random.ConvertMapedValueToIntScale(Random.GetMapedNoiseValue(strucuturePosition.X, strucuturePosition.Y), 0, numLists);
+            if (index == numLists)
+                index = numLists - 1;
+
+            List<BlockStruct> structureBlocks = GetBlocksByStructure(structureType, index);
             bool isBlockXPositive, isBlockXNegative, isBlockZPositive, isBlockZNegative;
 
             foreach (BlockStruct block in structureBlocks)
@@ -272,95 +295,161 @@ namespace Minecraft.WorldBuilding
             }
         }
 
-        private static void InitStructureBlocks()
+        private static Vector3i firstBlockPosition;
+        private static bool onStartup = true;
+        private static void Player_PlayerChangeBlock(Player sender, PlayerChangeBlockEventArgs args)
         {
-            // Oak tree
+            if (onStartup)
             {
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 0, 0), Type = BlockType.OakLog });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 1, 0), Type = BlockType.OakLog });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 2, 0), Type = BlockType.OakLog });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 3, 0), Type = BlockType.OakLog });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, 0), Type = BlockType.OakLog });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 5, 0), Type = BlockType.OakLog });
-
-                {
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 4, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 4, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, -1), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 4, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 4, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 4, -1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 4, -1), Type = BlockType.OakLeaves });
-                }
-                {
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 4, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 4, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, -2), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 4, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 4, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 4, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 4, -2), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 4, -1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 4, -1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 4, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 4, -2), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 4, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 4, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 4, -2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 4, -2), Type = BlockType.OakLeaves });
-                }
-
-                {
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 5, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 5, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 5, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 5, -1), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 5, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 5, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 5, -1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 5, -1), Type = BlockType.OakLeaves });
-                }
-                {
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 5, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 5, 0), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 5, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 5, -2), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 5, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 5, 1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 5, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 5, -2), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 5, -1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 5, -1), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 5, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 5, -2), Type = BlockType.OakLeaves });
-
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 5, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 5, 2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(2, 5, -2), Type = BlockType.OakLeaves });
-                    OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-2, 5, -2), Type = BlockType.OakLeaves });
-                }
-
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 6, 0), Type = BlockType.OakLeaves });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(1, 6, 0), Type = BlockType.OakLeaves });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(-1, 6, 0), Type = BlockType.OakLeaves });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 6, 1), Type = BlockType.OakLeaves });
-                OakTreeBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 6, -1), Type = BlockType.OakLeaves });
+                firstBlockPosition = args.BlockPosition;
+                onStartup = false;
             }
 
-            CactusBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 0, 0), Type = BlockType.Cactus });
-            CactusBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 1, 0), Type = BlockType.Cactus });
-            CactusBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 2, 0), Type = BlockType.Cactus });
-            CactusBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 3, 0), Type = BlockType.Cactus });
-            CactusBlocks.Add(new BlockStruct() { Position = new Vector3i(0, 4, 0), Type = BlockType.Cactus });
+            if (!Directory.Exists(SaveManager.SaveDirectory))
+            {
+                Directory.CreateDirectory(SaveManager.SaveDirectory);
+            }
+            if (!File.Exists(SaveManager.SaveDirectory + "/structure.xml"))
+            {
+                File.Create(SaveManager.SaveDirectory + "/structure.xml").Dispose();
+                firstBlockPosition = args.BlockPosition;
+            }
+
+            DataContractSerializer serializer = new DataContractSerializer(typeof(StructureSave));
+
+            StructureSave? save = new StructureSave();
+
+            Stream streamReader = File.OpenRead(SaveManager.SaveDirectory + "/structure.xml");
+
+            if (streamReader.Length > 0)
+                save = (StructureSave?)serializer.ReadObject(streamReader);
+
+            streamReader.Dispose();
+
+            if (save != null)
+            {
+                if (save.Blocks != null)
+                {
+                    save.Type = StructureType.OakTree;
+                    save.Blocks.Add(new BlockStruct() { Position = args.BlockPosition - firstBlockPosition, Type = args.Type });
+                }
+                else
+                {
+                    List<BlockStruct> blocks = new List<BlockStruct>
+                    {
+                        new BlockStruct() { Position = args.BlockPosition - firstBlockPosition, Type = args.Type }
+                    };
+                    save.Blocks = blocks;
+                }
+                   
+
+                List<Vector3i> positions = new List<Vector3i>();
+                List<int> indicies = new List<int>();
+                for (int i = 0; i < save.Blocks.Count; i++)
+                {
+                    int index = positions.IndexOf(save.Blocks[i].Position);
+                    if (index != -1)
+                        indicies.Add(index);
+
+                    if (save.Blocks[i].Type == BlockType.Air)
+                        indicies.Add(i);
+
+                    positions.Add(save.Blocks[i].Position);
+                }
+                indicies.Sort();
+                indicies = indicies.Distinct().ToList();
+                for (int i = indicies.Count - 1; i >= 0 ; i--)
+                {
+                    save.Blocks.RemoveAt(indicies[i]);
+                }
+
+                File.Delete(SaveManager.SaveDirectory + "/structure.xml");
+
+                Stream streamWriter = File.OpenWrite(SaveManager.SaveDirectory + "/structure.xml");
+
+                serializer.WriteObject(streamWriter, save);
+
+                streamWriter.Dispose();
+            }
+        }
+
+        private static void InitStructureBlocks()
+        {
+            List<StructureSave> structureSaves = new List<StructureSave>();
+
+            for (int i = 1; i < 6; i++)
+            {
+                StructureSave? save = LoadStructureSave("OakTree.OakTree" + i + ".xml");
+
+                if (save != null)
+                {
+                    structureSaves.Add(save);
+                }
+                else
+                {
+                    throw new Exception("Falied loading structures");
+                }
+            }
+
+            StructureSaves.Add(StructureType.OakTree, structureSaves);
+        }
+
+        private static StructureSave? LoadStructureSave(string fileName)
+        {
+            bool isFileEmpty = false;
+
+            Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Minecraft.Resources.Structures." + fileName);
+
+            if (stream != null)
+            {
+                StreamReader reader = new StreamReader(stream);
+
+                if (reader.BaseStream.Length == 0)
+                    isFileEmpty = true;
+
+                reader.Dispose();
+
+                if (!isFileEmpty)
+                {
+                    DataContractSerializer serializer = new DataContractSerializer(typeof(StructureSave));
+
+                    stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Minecraft.Resources.Structures." + fileName);
+
+                    if (stream != null)
+                    {
+                        StructureSave? save = (StructureSave?)serializer.ReadObject(stream);
+                        stream.Dispose();
+                        if (save != null)
+                        {
+                            return save;
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Failed loading structures");
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("Failed loading structures");
+            }
+
+            return null;
+        }
+
+        [DataContract]
+        private class StructureSave
+        {
+            [DataMember]
+            public StructureType Type { get; set; }
+            [DataMember]
+            public List<BlockStruct> Blocks { get; set; }
+
+            public StructureSave()
+            {
+                Blocks = new List<BlockStruct>();
+            }
         }
     }
 }

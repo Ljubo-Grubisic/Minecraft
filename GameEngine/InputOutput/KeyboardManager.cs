@@ -8,6 +8,7 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Key = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
+using System.Runtime.CompilerServices;
 
 namespace GameEngine
 {
@@ -25,11 +26,15 @@ namespace GameEngine
 
         private static NativeWindow Window;
 
+        public delegate void KeyDownManager(KeyboardKeyEventArgs args);
+        public static event KeyDownManager KeyDown;
+
         public static void Init(NativeWindow window)
         {
             Window = window;
             window.KeyDown += Window_KeyPressed;
             window.KeyUp += Window_KeyReleased;
+            window.KeyDown += OnKeyDown;
         }
 
         public static void Update()
@@ -151,6 +156,11 @@ namespace GameEngine
                 }
             }
             return output;
+        }
+
+        public static void OnKeyDown(KeyboardKeyEventArgs args)
+        {
+            KeyDown?.Invoke(args);
         }
     }
 }

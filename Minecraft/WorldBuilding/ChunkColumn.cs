@@ -171,6 +171,60 @@ namespace Minecraft.WorldBuilding
                 });
             });
         }
+
+        internal static (Vector2i ChunkPosition, Vector3i BlockPosition) ConvertWorldBlockPositionToLocal(Vector3i worldPosition)
+        {
+            int worldChunkColumnX = worldPosition.X / ChunkSize;
+            int worldChunkColumnZ = worldPosition.Z / ChunkSize;
+
+            int chunkColumnX, chunkColumnZ;
+            chunkColumnX = worldPosition.X % ChunkSize;
+            chunkColumnZ = worldPosition.Z % ChunkSize;
+
+            chunkColumnX += ChunkSize / 2;
+            chunkColumnZ += ChunkSize / 2;
+
+            if (chunkColumnX < 0)
+            {
+                chunkColumnX += ChunkSize;
+                worldChunkColumnX--;
+            }
+            if (chunkColumnZ < 0)
+            {
+                chunkColumnZ += +ChunkSize;
+                worldChunkColumnZ--;
+            }
+
+            if (chunkColumnX > ChunkSize - 1)
+            {
+                chunkColumnX -= ChunkSize;
+                worldChunkColumnX++;
+            }
+            if (chunkColumnZ > ChunkSize - 1)
+            {
+                chunkColumnZ -= ChunkSize;
+                worldChunkColumnZ++;
+            }
+
+            return (new Vector2i(worldChunkColumnX, worldChunkColumnZ), new Vector3i(chunkColumnX, worldPosition.Y, chunkColumnZ));
+        }
+
+        internal static Vector3i ConvertLocalPositionToWorldBlock((Vector2i ChunkPosition, Vector3i BlockPosition) position)
+        {
+            Vector3i worldPosition = new Vector3i();
+
+            worldPosition.X = position.ChunkPosition.X * ChunkSize;
+            worldPosition.Y = position.BlockPosition.Y;
+            worldPosition.Z = position.ChunkPosition.Y * ChunkSize;
+
+            worldPosition.X += position.BlockPosition.X;
+            worldPosition.Z += position.BlockPosition.Z;
+
+            worldPosition.X -= ChunkSize / 2;
+            worldPosition.Z -= ChunkSize / 2;
+
+            return worldPosition;
+        }
         #endregion
 
         #region Private

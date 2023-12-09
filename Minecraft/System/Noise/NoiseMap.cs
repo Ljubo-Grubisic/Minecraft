@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 
 namespace Minecraft.System
 {
@@ -13,23 +8,23 @@ namespace Minecraft.System
 
         private List<Vector2> Splines { get; set; } = new List<Vector2>();
 
-        internal FastNoiseLite.NoiseType NoiseType 
-        { 
-            get => noiseType; 
-            set { noiseType = value; Noise.SetNoiseType(value); } 
+        internal FastNoiseLite.NoiseType NoiseType
+        {
+            get => noiseType;
+            set { noiseType = value; Noise.SetNoiseType(value); }
         }
         internal FastNoiseLite.FractalType FractalType
         {
             get => fractalType;
             set { fractalType = value; Noise.SetFractalType(value); }
         }
-        internal int NumFractalOcaves 
-        { 
+        internal int NumFractalOcaves
+        {
             get => numFractalOcaves;
             set { numFractalOcaves = value; Noise.SetFractalOctaves(value); }
         }
-        internal float Frequency 
-        { 
+        internal float Frequency
+        {
             get => frequency;
             set { frequency = value; Noise.SetFrequency(value); }
         }
@@ -45,7 +40,7 @@ namespace Minecraft.System
         private float frequency;
         private int seed;
 
-        internal NoiseMap(int seed, float frequency, FastNoiseLite.NoiseType noiseType = FastNoiseLite.NoiseType.Perlin, 
+        internal NoiseMap(int seed, float frequency, FastNoiseLite.NoiseType noiseType = FastNoiseLite.NoiseType.Perlin,
             FastNoiseLite.FractalType fractalType = FastNoiseLite.FractalType.FBm, int numFractalOcaves = 4)
         {
             this.Noise = new FastNoiseLite(seed);
@@ -61,7 +56,7 @@ namespace Minecraft.System
         internal void CreateSpline(Vector2 position)
         {
             this.Splines.Add(position);
-            this.Splines.Sort((spline1, spline2) => 
+            this.Splines.Sort((spline1, spline2) =>
             {
                 if (spline1.X < spline2.X)
                     return -1;
@@ -100,7 +95,7 @@ namespace Minecraft.System
             Vector2 spline2 = this.Splines.ValueOfGreater(noiseData);
 
             if (spline1 == spline2)
-                 return noiseData;
+                return noiseData;
 
             float data = (((spline2.Y - spline1.Y) / (spline2.X - spline1.X)) * (noiseData - spline1.X)) + spline1.Y;
 
@@ -139,16 +134,28 @@ namespace Minecraft.System
         /// <returns></returns>
         internal int[,] ConvertMapedDataToIntScale(float[,] mapedData, int min, int max)
         {
-            int[,] heightData = new int[mapedData.GetLength(0), mapedData.GetLength(1)];
+            int[,] intData = new int[mapedData.GetLength(0), mapedData.GetLength(1)];
 
             for (int x = 0; x < mapedData.GetLength(0); x++)
             {
                 for (int y = 0; y < mapedData.GetLength(1); y++)
                 {
-                    heightData[x, y] = (int)Map(0, 1, min, max, mapedData[x, y]);
+                    intData[x, y] = (int)Map(0, 1, min, max, mapedData[x, y]);
                 }
             }
-            return heightData;
+            return intData;
+        }
+
+        /// <summary>
+        /// Converts mapedValue to a new intiger scale
+        /// </summary>
+        /// <param name="mapedValue">Data from 0 to 1</param>
+        /// <param name="min">Output minimum</param>
+        /// <param name="max">Output maximum</param>
+        /// <returns></returns>
+        internal int ConvertMapedValueToIntScale(float mapedValue, int min, int max)
+        {
+            return (int)Math.Round(Map(0, 1, min, max, mapedValue));
         }
 
         /// <summary>

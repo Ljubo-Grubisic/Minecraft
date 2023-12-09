@@ -10,10 +10,20 @@
 
   <ItemGroup>
     <None Remove="Resources\BlockConfig.json" />
+    <None Remove="Resources\Structures\OakTree\OakTree1.xml" />
+    <None Remove="Resources\Structures\OakTree\OakTree2.xml" />
+    <None Remove="Resources\Structures\OakTree\OakTree3.xml" />
+    <None Remove="Resources\Structures\OakTree\OakTree4.xml" />
+    <None Remove="Resources\Structures\OakTree\OakTree5.xml" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="WorldBuilding\BlockConfig.json">
+    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree1.xml" />
+    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree2.xml" />
+    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree3.xml" />
+    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree4.xml" />
+    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree5.xml" />
+    <EmbeddedResource Include="WorldBuilding\Block\BlockConfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

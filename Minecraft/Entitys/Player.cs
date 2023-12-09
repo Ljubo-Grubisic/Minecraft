@@ -2,8 +2,11 @@
 using GameEngine.Rendering;
 using Minecraft.System;
 using Minecraft.WorldBuilding;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using OpenTK.Windowing.Common;
 
 namespace Minecraft.Entitys
 {
@@ -20,6 +23,9 @@ namespace Minecraft.Entitys
 
         internal Vector3 Position { get; set; }
 
+        internal delegate void PlayerChangeBlockEventHandler(Player sender, PlayerChangeBlockEventArgs args);
+        internal static event PlayerChangeBlockEventHandler PlayerChangeBlock;
+
         private BlockType InHand = BlockType.OakLog;
 
         internal Player(PlayerMovementType movementType)
@@ -33,25 +39,54 @@ namespace Minecraft.Entitys
 
             if (MouseManager.OnButtonPressed(MouseButton.Left))
             {
-                (Vector2i ChunkPosition, Vector3i BlockPosition)? rayCastData = RayCaster.FindBlockLookingAt(camera.Position, camera.Front, (RenderDistance * ChunkColumn.ChunkSize) / 6);
+                Vector3i? rayCastData = RayCaster.FindBlockLookingAt(camera.Position, camera.Front, (RenderDistance * ChunkColumn.ChunkSize) / 6);
                 if (rayCastData != null)
                 {
-                    ChunkManager.ChangeBlock(rayCastData.Value.ChunkPosition, new BlockStruct { Position = rayCastData.Value.BlockPosition, Type = BlockType.Air }, true);
+                    ChunkManager.ChangeBlock(new BlockStruct { Position = (Vector3i)rayCastData, Type = BlockType.Air }, true);
+                    OnPlayerChangeBlock((Vector3i)rayCastData, BlockType.Air);
                 }
             }
             if (MouseManager.OnButtonPressed(MouseButton.Right))
             {
-                (Vector2i ChunkPosition, Vector3i BlockPosition)? rayCastData = RayCaster.FindBlockLookingOut(camera.Position, camera.Front, (RenderDistance * ChunkColumn.ChunkSize) / 6);
+                Vector3i? rayCastData = RayCaster.FindBlockLookingOut(camera.Position, camera.Front, (RenderDistance * ChunkColumn.ChunkSize) / 6);
                 if (rayCastData != null)
                 {
-                    ChunkManager.ChangeBlock(rayCastData.Value.ChunkPosition, new BlockStruct { Position = rayCastData.Value.BlockPosition, Type = this.InHand }, true);
+                    ChunkManager.ChangeBlock(new BlockStruct { Position = (Vector3i)rayCastData, Type = InHand }, true);
+                    OnPlayerChangeBlock((Vector3i)rayCastData, InHand);
+                }
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (KeyboardManager.IsKeyDown((Keys)49 + i))
+                {
+                    this.InHand = (BlockType)i + 1;
+                    Console.WriteLine("Block in hand: " + this.InHand);
                 }
             }
         }
 
+
         public object Clone()
         {
             return new Player(MovementType);
+        }
+
+        protected virtual void OnPlayerChangeBlock(Vector3i blockPosition,  BlockType type)
+        {
+            PlayerChangeBlock?.Invoke(this, new PlayerChangeBlockEventArgs(blockPosition, type));
+        }
+    }
+
+    internal class PlayerChangeBlockEventArgs : EventArgs
+    {
+        public Vector3i BlockPosition { get; private set; }
+        public BlockType Type { get; private set; }
+
+        public PlayerChangeBlockEventArgs(Vector3i blockPosition, BlockType type) : base()
+        {
+            this.BlockPosition = blockPosition;
+            this.Type = type;
         }
     }
 }

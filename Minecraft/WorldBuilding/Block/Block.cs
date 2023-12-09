@@ -154,7 +154,7 @@ namespace Minecraft.WorldBuilding
             CalculateTexCoords();
 
             BlockConfig[]? blockConfigs;
-            using (Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Minecraft.WorldBuilding.BlockConfig.json"))
+            using (Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Minecraft.WorldBuilding.Block.BlockConfig.json"))
             {
                 if (stream == null)
                     throw new Exception("Failed loading BlockConfig.json");
@@ -175,7 +175,7 @@ namespace Minecraft.WorldBuilding
             }
             else
             {
-                throw new Exception("Failed loding BlockConfig.json");
+                throw new Exception("Failed loading BlockConfig.json");
             }
         }
 

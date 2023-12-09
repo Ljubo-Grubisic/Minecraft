@@ -75,155 +75,14 @@ namespace Minecraft.WorldBuilding
 
         internal static void ChangeBlock(Vector2i chunkColumnPositon, BlockStruct blockStruct, bool save)
         {
-            if (save)
-            {
-                ActionManager.QueueAction(ActionManager.Thread.ChunkManager, () =>
-                {
-                    if (ChunksLoaded.ContainsKey(chunkColumnPositon))
-                    {
-                        ChunksLoaded[chunkColumnPositon].ChangeBlockType(blockStruct, save);
-                        if (!ChunksWaitingToUnloadDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) &&
-                        !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                        {
-                            ChunksWaitingToBakePlayerUpdate.Enqueue(ChunksLoaded[chunkColumnPositon]);
-                        }
+            ChangeAndUpdateBlock(chunkColumnPositon, blockStruct, save);
+        }
 
-                        if (blockStruct.Position.X == 0 || blockStruct.Position.X == ChunkColumn.ChunkSize - 1 ||
-                            blockStruct.Position.Z == 0 || blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
-                        {
-                            int index;
-                            List<ChunkColumn> neighborChunks = FindNeighbors(ChunksLoaded[chunkColumnPositon]);
-
-                            if (blockStruct.Position.X == 0)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(-1, 0) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                            if (blockStruct.Position.X == ChunkColumn.ChunkSize - 1)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(1, 0) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                            if (blockStruct.Position.Z == 0)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(0, -1) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                            if (blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(0, 1) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            else
-            {
-                ActionManager.QueueAction(ActionManager.Thread.ChunkManager, () =>
-                {
-                    if (ChunksLoaded.ContainsKey(chunkColumnPositon))
-                    {
-                        ChunksLoaded[chunkColumnPositon].ChangeBlockType(blockStruct, save);
-                        if (!ChunksWaitingToUnloadDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                        {
-                            ChunksWaitingToBake.Enqueue(ChunksLoaded[chunkColumnPositon]);
-                        }
-
-                        if (blockStruct.Position.X == 0 || blockStruct.Position.X == ChunkColumn.ChunkSize - 1 ||
-                            blockStruct.Position.Z == 0 || blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
-                        {
-                            int index;
-                            List<ChunkColumn> neighborChunks = FindNeighbors(ChunksLoaded[chunkColumnPositon]);
-
-                            if (blockStruct.Position.X == 0)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(-1, 0) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                            if (blockStruct.Position.X == ChunkColumn.ChunkSize - 1)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(1, 0) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                            if (blockStruct.Position.Z == 0)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(0, -1) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                            if (blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
-                            {
-                                index = neighborChunks.IndexOf(new Vector2i(0, 1) + chunkColumnPositon);
-
-                                if (index != -1)
-                                {
-                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
-                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
-                                    {
-                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+        internal static void ChangeBlock(BlockStruct blockStruct, bool save)
+        {
+            (Vector2i chunkColumnPosition, Vector3i blockPosition) = ChunkColumn.ConvertWorldBlockPositionToLocal(blockStruct.Position);
+            blockStruct.Position = blockPosition;
+            ChangeAndUpdateBlock(chunkColumnPosition, blockStruct, save);
         }
 
         internal static void Unload()
@@ -333,19 +192,22 @@ namespace Minecraft.WorldBuilding
                                 }
                             }
 
-                            if (ChunksWaitingToBake.Count != 0)
+                            for (int i = 0; i < 2; i++)
                             {
-                                ChunkColumn chunkBaked;
-                                do
+                                if (ChunksWaitingToBake.Count != 0)
                                 {
-                                    chunkBaked = ChunksWaitingToBake.Dequeue();
-                                    chunkBaked.IsBaking = true;
-                                }
-                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+                                    ChunkColumn chunkBaked;
+                                    do
+                                    {
+                                        chunkBaked = ChunksWaitingToBake.Dequeue();
+                                        chunkBaked.IsBaking = true;
+                                    }
+                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
-                                if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
-                                {
-                                    BakeChunk(chunkBaked);
+                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                    {
+                                        BakeChunk(chunkBaked);
+                                    }
                                 }
                             }
 
@@ -503,6 +365,159 @@ namespace Minecraft.WorldBuilding
                 chunksList.Add(chunkBuffer);
 
             return chunksList;
+        }
+
+        private static void ChangeAndUpdateBlock(Vector2i chunkColumnPositon, BlockStruct blockStruct, bool save)
+        {
+            if (save)
+            {
+                ActionManager.QueueAction(ActionManager.Thread.ChunkManager, () =>
+                {
+                    if (ChunksLoaded.ContainsKey(chunkColumnPositon))
+                    {
+                        ChunksLoaded[chunkColumnPositon].ChangeBlockType(blockStruct, save);
+                        if (!ChunksWaitingToUnloadDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) &&
+                        !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                        {
+                            ChunksWaitingToBakePlayerUpdate.Enqueue(ChunksLoaded[chunkColumnPositon]);
+                        }
+
+                        if (blockStruct.Position.X == 0 || blockStruct.Position.X == ChunkColumn.ChunkSize - 1 ||
+                            blockStruct.Position.Z == 0 || blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
+                        {
+                            int index;
+                            List<ChunkColumn> neighborChunks = FindNeighbors(ChunksLoaded[chunkColumnPositon]);
+
+                            if (blockStruct.Position.X == 0)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(-1, 0) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                            if (blockStruct.Position.X == ChunkColumn.ChunkSize - 1)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(1, 0) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                            if (blockStruct.Position.Z == 0)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(0, -1) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                            if (blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(0, 1) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                    && !ChunksWaitingToBakePlayerUpdateDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBakePlayerUpdate.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            else
+            {
+                ActionManager.QueueAction(ActionManager.Thread.ChunkManager, () =>
+                {
+                    if (ChunksLoaded.ContainsKey(chunkColumnPositon))
+                    {
+                        ChunksLoaded[chunkColumnPositon].ChangeBlockType(blockStruct, save);
+                        if (!ChunksWaitingToUnloadDictionary.ContainsKey(chunkColumnPositon) && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                        {
+                            ChunksWaitingToBake.Enqueue(ChunksLoaded[chunkColumnPositon]);
+                        }
+
+                        if (blockStruct.Position.X == 0 || blockStruct.Position.X == ChunkColumn.ChunkSize - 1 ||
+                            blockStruct.Position.Z == 0 || blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
+                        {
+                            int index;
+                            List<ChunkColumn> neighborChunks = FindNeighbors(ChunksLoaded[chunkColumnPositon]);
+
+                            if (blockStruct.Position.X == 0)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(-1, 0) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                            if (blockStruct.Position.X == ChunkColumn.ChunkSize - 1)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(1, 0) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                            if (blockStruct.Position.Z == 0)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(0, -1) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                            if (blockStruct.Position.Z == ChunkColumn.ChunkSize - 1)
+                            {
+                                index = neighborChunks.IndexOf(new Vector2i(0, 1) + chunkColumnPositon);
+
+                                if (index != -1)
+                                {
+                                    if (!ChunksWaitingToUnloadDictionary.ContainsKey(neighborChunks[index].Position) || !ChunksLoaded[chunkColumnPositon].IsUnloaded
+                                        && !ChunksWaitingToBakeDictionary.ContainsKey(chunkColumnPositon))
+                                    {
+                                        ChunksWaitingToBake.Enqueue(neighborChunks[index]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 }
