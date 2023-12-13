@@ -116,7 +116,7 @@ namespace Minecraft.WorldBuilding
 
                 if (totalTimeBeforeUpdate >= TimeUntilUpdate)
                 {
-                    //Console.WriteLine("ChunkManaginThread fps:" + (float)Math.Round(1 / totalTimeBeforeUpdate));
+                    Console.WriteLine("ChunkManaginThread fps:" + (float)Math.Round(1 / totalTimeBeforeUpdate));
                     totalTimeBeforeUpdate = 0;
 
                     ActionManager.InvokeActions(ActionManager.Thread.ChunkManager);
@@ -192,7 +192,7 @@ namespace Minecraft.WorldBuilding
                                 }
                             }
 
-                            for (int i = 0; i < 2; i++)
+                            for (int i = 0; i < 20; i++)
                             {
                                 if (ChunksWaitingToBake.Count != 0)
                                 {

@@ -1,8 +1,5 @@
 ﻿using Minecraft.WorldBuilding;
 using OpenTK.Mathematics;
-using System.Collections.Generic;
-using System.Reflection;
-using static OpenTK.Graphics.OpenGL.GL;
 
 namespace Minecraft.System
 {
@@ -90,7 +87,7 @@ namespace Minecraft.System
             for (int i = 0; i < values.Count; i++)
             {
                 bool remove = function.Invoke(values[i]);
-                if (remove) 
+                if (remove)
                     indicies.Add(i);
             }
 
@@ -152,7 +149,6 @@ namespace Minecraft.System
         internal static List<T> Remove<T>(this List<T> values, List<T> valuesToBeRemoved)
         {
             List<int> indicies = new List<int>();
-            bool needsGarbageCollector = false;
             for (int i = values.Count - 1; i >= 0; i--)
             {
                 if (valuesToBeRemoved.Contains(values[i]))
@@ -161,17 +157,11 @@ namespace Minecraft.System
                 }
             }
 
-            if (indicies.Count > 50)
-                needsGarbageCollector = true;
-
             foreach (int index in indicies)
             {
                 values.RemoveAt(index);
             }
             indicies.Clear();
-
-            if (needsGarbageCollector)
-                GC.Collect();
 
             return values;
         }
@@ -263,6 +253,29 @@ namespace Minecraft.System
             for (int i = 0; i < dictionary.Count; i++)
             {
                 result.Add(dictionary.Values.ToArray()[i].Key, dictionary.Values.ToArray()[i].Value);
+            }
+
+            return result;
+        }
+
+        internal static List<BlockStruct> RemoveDoubleXZ(this List<BlockStruct> values)
+        {
+            List<Vector2i> position = new List<Vector2i>();
+            List<BlockStruct> blockStructsToRemove = new List<BlockStruct>();
+            List<BlockStruct> result = new List<BlockStruct>();
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                result.Add(values[i]);
+                if (position.Contains(values[i].Position.Xz))
+                    blockStructsToRemove.Add(values[i]);
+                else
+                    position.Add(values[i].Position.Xz);
+            }
+
+            for (int i = 0; i < blockStructsToRemove.Count; i++)
+            {
+                result.Remove(blockStructsToRemove);
             }
 
             return result;
@@ -471,7 +484,7 @@ namespace Minecraft.System
             Dictionary<Vector2i, (Vector2i, float)> dictionary = values.UnorderedItems.ToDictionary(keySelector);
 
             if (dictionary.ContainsKey(position))
-                 return true; 
+                return true;
             return false;
         }
 
