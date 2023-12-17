@@ -116,7 +116,7 @@ namespace Minecraft.WorldBuilding
 
                 if (totalTimeBeforeUpdate >= TimeUntilUpdate)
                 {
-                    Console.WriteLine("ChunkManaginThread fps:" + (float)Math.Round(1 / totalTimeBeforeUpdate));
+                    //Console.WriteLine("ChunkManaginThread fps:" + (float)Math.Round(1 / totalTimeBeforeUpdate));
                     totalTimeBeforeUpdate = 0;
 
                     ActionManager.InvokeActions(ActionManager.Thread.ChunkManager);
@@ -192,22 +192,19 @@ namespace Minecraft.WorldBuilding
                                 }
                             }
 
-                            for (int i = 0; i < 20; i++)
+                            if (ChunksWaitingToBake.Count != 0)
                             {
-                                if (ChunksWaitingToBake.Count != 0)
+                                ChunkColumn chunkBaked;
+                                do
                                 {
-                                    ChunkColumn chunkBaked;
-                                    do
-                                    {
-                                        chunkBaked = ChunksWaitingToBake.Dequeue();
-                                        chunkBaked.IsBaking = true;
-                                    }
-                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+                                    chunkBaked = ChunksWaitingToBake.Dequeue();
+                                    chunkBaked.IsBaking = true;
+                                }
+                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
-                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
-                                    {
-                                        BakeChunk(chunkBaked);
-                                    }
+                                if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                {
+                                    BakeChunk(chunkBaked);
                                 }
                             }
 

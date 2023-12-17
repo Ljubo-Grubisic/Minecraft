@@ -5,6 +5,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using GameEngine.ModelLoading;
 using GameEngine.Rendering;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace GameEngine.MainLooping
 {
@@ -25,6 +26,7 @@ namespace GameEngine.MainLooping
 
             OnInit();
             this.Camera = OnCreateCamera();
+            
             OnLoadShaders();
             OnLoadTextures();
             OnLoadModels();
@@ -37,6 +39,15 @@ namespace GameEngine.MainLooping
             Camera.UpdateKeys(MouseState, KeyboardState, (float)args.Time);
 
             OnUpdate(args);
+
+            if (KeyboardManager.IsKeyDown(Keys.F11))
+            {
+                this.WindowState = WindowState.Fullscreen;
+            }
+            if (KeyboardManager.IsKeyDown(Keys.Escape) && this.WindowState == WindowState.Fullscreen)
+            {
+                this.WindowState = WindowState.Normal;
+            }
 
             KeyboardManager.Update();
         }

@@ -1,6 +1,7 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using Button = OpenTK.Windowing.GraphicsLibraryFramework.MouseButton;
+using OpenTK.Windowing.Common;
 
 namespace GameEngine
 {
@@ -11,9 +12,18 @@ namespace GameEngine
 
         private static NativeWindow Window;
 
+        public delegate void MouseWheelManager(MouseWheelEventArgs args);
+        public static event MouseWheelManager MouseWheel;
+
         public static void Init(NativeWindow window)
         {
             Window = window;
+            Window.MouseWheel += Window_MouseWheel;
+        }
+
+        private static void Window_MouseWheel(MouseWheelEventArgs obj)
+        {
+            MouseWheel?.Invoke(obj);
         }
 
         public static bool OnButtonPressed(Button button)

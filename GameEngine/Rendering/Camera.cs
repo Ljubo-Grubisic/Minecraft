@@ -117,7 +117,7 @@ namespace GameEngine.Rendering
             Right = Vector3.Normalize(Vector3.Cross(Front, Vector3.UnitY));
             Up = Vector3.Cross(Right, Front);
 
-            Zoom += mouse.ScrollDelta.Y;
+            //Zoom += mouse.ScrollDelta.Y;
 
             if (keyboard.IsKeyDown(Keys.Space))
             {

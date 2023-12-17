@@ -1,12 +1,9 @@
 ﻿using GameEngine.ModelLoading;
-using GameEngine.Shadering;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
-using System.Text.Json;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Minecraft.WorldBuilding
 {
@@ -16,13 +13,46 @@ namespace Minecraft.WorldBuilding
         None = 0,
         Air,
         Dirt,
-        Grass,
+        PlainGrass,
+        JungleGrass,
+        SpruceForestGrass,
+        SavannaGrass,
+        SnowCoveredGrass,
         Stone,
+        CobbleStone,
+        SandStone,
+        Gravel,
+        Clay,
         Sand,
         Water,
-        OakLeaves,
+        Ice,
+        BlueIce,
+        Snow,
+
         OakLog,
+        OakLeaves,
+        OakPlank,
+
         Cactus,
+
+        SpruceLog,
+        SpruceLeaves,
+        SnowCoveredSpruceLeaves,
+        SprucePlank,
+
+        BirchLog,
+        BirchLeaves,
+        BirchPlank,
+
+        JungleLog,
+        JungleLeaves,
+        JunglePlank,
+
+        AcaciaLog,
+        AcaciaLeaves,
+        AcaciaPlank,
+
+        TotalPlusOne,
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -34,10 +64,10 @@ namespace Minecraft.WorldBuilding
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    internal enum BlockShape : byte  
+    internal enum BlockShape : byte
     {
         None = 0,
-        Square, 
+        Square,
         X
     }
 
@@ -58,7 +88,7 @@ namespace Minecraft.WorldBuilding
     internal static class Block
     {
         internal static readonly int NumTexturesRow = 5;
-        internal static readonly int NumTexturesColumn = 3;
+        internal static readonly int NumTexturesColumn = 7;
 
         internal static Texture Texture { get; private set; }
         internal static List<Vertex> Vertices = new List<Vertex>()
@@ -158,7 +188,7 @@ namespace Minecraft.WorldBuilding
             {
                 if (stream == null)
                     throw new Exception("Failed loading BlockConfig.json");
-            
+
                 using (StreamReader reader = new StreamReader(stream))
                 {
                     string json = reader.ReadToEnd();

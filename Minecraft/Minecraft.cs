@@ -29,6 +29,7 @@ namespace Minecraft
 
         protected override void OnInit()
         {
+            Biome.Init();
             Block.Init();
             ChunkManager.Init();
             Player = new Player(PlayerMovementType.FreeCam) { RenderDistance = 37 };
@@ -36,7 +37,7 @@ namespace Minecraft
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 150.0f, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 25f };
+            return new Camera(new Vector3(13200, 135.0f, -3231), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 25f };
         }
 
         protected override void OnLoadShaders()
@@ -56,6 +57,7 @@ namespace Minecraft
         {
             //Console.WriteLine(Math.Round(1 / args.Time));
 
+            
             ActionManager.InvokeActions(ActionManager.Thread.Main);
 
             Player.Update(Camera);
@@ -72,7 +74,11 @@ namespace Minecraft
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                     WireFrameMode = true;
                 }
-            } 
+            }
+            if (KeyboardManager.OnKeyPressed(Keys.B))
+            {
+                Structure.SaveBulding = !Structure.SaveBulding;
+            }
         }
         protected override void OnRender(FrameEventArgs args, Matrix4 view, Matrix4 projection)
         {
@@ -104,7 +110,6 @@ namespace Minecraft
                     }
                 }
             }
-
         }
 
         protected override void OnUnload()

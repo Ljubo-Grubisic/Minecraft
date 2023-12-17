@@ -31,6 +31,8 @@ namespace Minecraft.Entitys
         internal Player(PlayerMovementType movementType)
         {
             MovementType = movementType;
+
+            MouseManager.MouseWheel += MouseManager_MouseWheel;
         }
 
         internal void Update(Camera camera)
@@ -55,15 +57,6 @@ namespace Minecraft.Entitys
                     OnPlayerChangeBlock((Vector3i)rayCastData, InHand);
                 }
             }
-
-            for (int i = 0; i < 9; i++)
-            {
-                if (KeyboardManager.IsKeyDown((Keys)49 + i))
-                {
-                    this.InHand = (BlockType)i + 1;
-                    Console.WriteLine("Block in hand: " + this.InHand);
-                }
-            }
         }
 
 
@@ -75,6 +68,21 @@ namespace Minecraft.Entitys
         protected virtual void OnPlayerChangeBlock(Vector3i blockPosition,  BlockType type)
         {
             PlayerChangeBlock?.Invoke(this, new PlayerChangeBlockEventArgs(blockPosition, type));
+        }
+
+        private void MouseManager_MouseWheel(MouseWheelEventArgs args)
+        {
+            InHand = (BlockType)((int)InHand + (int)args.Offset.Y);
+            if ((int)InHand <= 1)
+            {
+                InHand = (BlockType)2;
+            }
+            else if ((int)InHand >= (int)BlockType.TotalPlusOne - 1) 
+            {
+                InHand = (BlockType)(int)BlockType.TotalPlusOne - 1;
+            }
+            Console.Clear();
+            Console.WriteLine(InHand);
         }
     }
 

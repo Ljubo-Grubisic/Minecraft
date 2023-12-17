@@ -14,7 +14,7 @@
     "TextureIndexColumn": 0
   },
   {
-    "BlockType": "Grass",
+    "BlockType": "PlainGrass",
     "BlockVisibility": "Opaque",
     "BlockShape": "Square",
     "TextureIndexRow": 0,
@@ -42,13 +42,6 @@
     "TextureIndexColumn": 4
   },
   {
-    "BlockType": "OakLeaves",
-    "BlockVisibility": "Opaque",
-    "BlockShape": "Square",
-    "TextureIndexRow": 1,
-    "TextureIndexColumn": 0
-  },
-  {
     "BlockType": "OakLog",
     "BlockVisibility": "Opaque",
     "BlockShape": "Square",
@@ -56,10 +49,193 @@
     "TextureIndexColumn": 2
   },
   {
+    "BlockType": "OakLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 1,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "OakPlank",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 1,
+    "TextureIndexColumn": 3
+  },
+  {
     "BlockType": "Cactus",
     "BlockVisibility": "Opaque",
     "BlockShape": "Square",
     "TextureIndexRow": 1,
     "TextureIndexColumn": 1
+  },
+  {
+    "BlockType": "Ice",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 1,
+    "TextureIndexColumn": 4
+  },
+  {
+    "BlockType": "BlueIce",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 2,
+    "TextureIndexColumn": 4
+  },
+  {
+    "BlockType": "SprucePlank",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 2,
+    "TextureIndexColumn": 3
+  },
+  {
+    "BlockType": "SpruceLog",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 2,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "SnowCoveredSpruceLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 2,
+    "TextureIndexColumn": 1
+  },
+  {
+    "BlockType": "SpruceLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 2,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "Snow",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 3,
+    "TextureIndexColumn": 4
+  },
+  {
+    "BlockType": "BirchPlank",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 3,
+    "TextureIndexColumn": 3
+  },
+  {
+    "BlockType": "BirchLog",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 3,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "BirchLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 3,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "Clay",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 3,
+    "TextureIndexColumn": 1
+  },
+  {
+    "BlockType": "SnowCoveredGrass",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 4,
+    "TextureIndexColumn": 4
+  },
+  {
+    "BlockType": "AcaciaPlank",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 4,
+    "TextureIndexColumn": 3
+  },
+  {
+    "BlockType": "AcaciaLog",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 4,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "AcaciaLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 4,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "Gravel",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 4,
+    "TextureIndexColumn": 1
+  },
+  {
+    "BlockType": "JunglePlank",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 5,
+    "TextureIndexColumn": 3
+  },
+  {
+    "BlockType": "JungleLog",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 5,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "JungleLeaves",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 5,
+    "TextureIndexColumn": 0
+  },
+  {
+    "BlockType": "CobbleStone",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 5,
+    "TextureIndexColumn": 1
+  },
+  {
+    "BlockType": "SandStone",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 5,
+    "TextureIndexColumn": 4
+  },
+  {
+    "BlockType": "JungleGrass",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 6,
+    "TextureIndexColumn": 1
+  },
+
+  {
+    "BlockType": "SpruceForestGrass",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 6,
+    "TextureIndexColumn": 2
+  },
+  {
+    "BlockType": "SavannaGrass",
+    "BlockVisibility": "Opaque",
+    "BlockShape": "Square",
+    "TextureIndexRow": 6,
+    "TextureIndexColumn": 0
   }
 ]
