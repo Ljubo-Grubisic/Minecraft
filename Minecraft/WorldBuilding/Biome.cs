@@ -39,6 +39,16 @@ namespace Minecraft.WorldBuilding
         Count
     }
 
+    internal enum VegatationStructureType
+    {
+        None = -1,
+
+        Primary,
+        Secondary,
+
+        Count
+    }
+
     internal class BiomeCategoryConfig
     {
         public BiomeCategory Category { get; set; }
@@ -56,7 +66,7 @@ namespace Minecraft.WorldBuilding
         public Vector2 TemperatureRange { get; set; }
         public Vector2 HumidityRange { get; set; }
 
-        public StructureType MainVegetationStructure { get; set; }
+        public StructureType PrimaryVegetationStructure { get; set; }
         public StructureType SecondaryVegetationStructure { get; set; }
         public StructureType RareStructure { get; set; }
 
@@ -104,26 +114,9 @@ namespace Minecraft.WorldBuilding
             }
 
             Structure.AddVegetation(vegetation, ref blocks, chunkPosition, height, biome, WorldGenerator.WaterLevel);
+            Structure.AddRareStructure(ref blocks, chunkPosition, height, biome, WorldGenerator.WaterLevel, 30);
 
             return blocks;
-        }
-
-        private static BiomeConfig GetBiome(int height, int temperature, int humidity)
-        {
-            BiomeCategory biomeCategory = GetBiomeCategory(height);
-            BiomeCategoryConfig biomeCategoryConfig = GetBiomeCategoryConfig(biomeCategory);
-
-            foreach (BiomeType type in biomeCategoryConfig.BiomeTypes)
-            {
-                BiomeConfig biomeConfig = GetBiomeConfig(type);
-
-                if (temperature >= biomeConfig.TemperatureRange.X && temperature <= biomeConfig.TemperatureRange.Y &&
-                    humidity >= biomeConfig.HumidityRange.X && humidity <= biomeConfig.HumidityRange.Y)
-                {
-                    return biomeConfig;
-                }
-            }
-            throw new Exception("Invalid input no BiomeConfig has requested attributes");
         }
 
         internal static BiomeConfig GetBiomeConfig(BiomeType type)
@@ -144,6 +137,48 @@ namespace Minecraft.WorldBuilding
                     return biomeCategory;
             }
             throw new Exception("BiomeCategory not loaded");
+        }
+
+        internal static StructureType GetBiomeConfigStructureByPosition(BiomeType type, Vector2i position)
+        {
+            BiomeConfig biomeConfig = GetBiomeConfig(type);
+
+            if (biomeConfig.SecondaryVegetationStructure == StructureType.None)
+            {
+                return biomeConfig.PrimaryVegetationStructure;
+            }
+
+            int rotationIndex = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(position.X, position.Y), -1, 2);
+
+            if (rotationIndex == -1)
+                rotationIndex = 0;
+            if (rotationIndex == 2)
+                rotationIndex = 1;
+
+            if (rotationIndex == 0)
+                return GetBiomeConfig(type).PrimaryVegetationStructure;
+            if (rotationIndex == 1)
+                return GetBiomeConfig(type).SecondaryVegetationStructure;
+
+            throw new Exception("Faild getting random number");
+        }
+
+        private static BiomeConfig GetBiome(int height, int temperature, int humidity)
+        {
+            BiomeCategory biomeCategory = GetBiomeCategory(height);
+            BiomeCategoryConfig biomeCategoryConfig = GetBiomeCategoryConfig(biomeCategory);
+
+            foreach (BiomeType type in biomeCategoryConfig.BiomeTypes)
+            {
+                BiomeConfig biomeConfig = GetBiomeConfig(type);
+
+                if (temperature >= biomeConfig.TemperatureRange.X && temperature <= biomeConfig.TemperatureRange.Y &&
+                    humidity >= biomeConfig.HumidityRange.X && humidity <= biomeConfig.HumidityRange.Y)
+                {
+                    return biomeConfig;
+                }
+            }
+            throw new Exception("Invalid input no BiomeConfig has requested attributes");
         }
 
         private static BiomeCategory GetBiomeCategory(int height)
@@ -168,7 +203,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 22.5f),
                 HumidityRange = new Vector2(20, 100),
 
-                MainVegetationStructure = StructureType.None,
+                PrimaryVegetationStructure = StructureType.None,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.SunkenShip,
 
@@ -184,7 +219,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(22.5f, 45),
                 HumidityRange = new Vector2(50, 100),
 
-                MainVegetationStructure = StructureType.None,
+                PrimaryVegetationStructure = StructureType.None,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.SunkenShip,
 
@@ -200,7 +235,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(22.5f, 45),
                 HumidityRange = new Vector2(0, 50),
 
-                MainVegetationStructure = StructureType.None,
+                PrimaryVegetationStructure = StructureType.None,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.SunkenShip,
 
@@ -216,7 +251,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 22.5f),
                 HumidityRange = new Vector2(0, 20),
 
-                MainVegetationStructure = StructureType.None,
+                PrimaryVegetationStructure = StructureType.None,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.SunkenShip,
 
@@ -233,7 +268,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(15, 30),
                 HumidityRange = new Vector2(0, 33),
 
-                MainVegetationStructure = StructureType.OakTree,
+                PrimaryVegetationStructure = StructureType.OakTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.ViligerHut,
 
@@ -249,7 +284,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 15),
                 HumidityRange = new Vector2(0, 33),
 
-                MainVegetationStructure = StructureType.BirchTree,
+                PrimaryVegetationStructure = StructureType.BirchTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.ViligerHut,
 
@@ -265,7 +300,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(15, 30),
                 HumidityRange = new Vector2(33, 66),
 
-                MainVegetationStructure = StructureType.BirchTree,
+                PrimaryVegetationStructure = StructureType.BirchTree,
                 SecondaryVegetationStructure = StructureType.OakTree,
                 RareStructure = StructureType.ViligerHut,
 
@@ -281,7 +316,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 15),
                 HumidityRange = new Vector2(33, 100),
 
-                MainVegetationStructure = StructureType.SpruceTree,
+                PrimaryVegetationStructure = StructureType.SpruceTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.Iglu,
 
@@ -297,7 +332,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(30, 45),
                 HumidityRange = new Vector2(0, 33),
 
-                MainVegetationStructure = StructureType.Cactus,
+                PrimaryVegetationStructure = StructureType.Cactus,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.SandCastle,
 
@@ -313,7 +348,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(30, 45),
                 HumidityRange = new Vector2(33, 66),
 
-                MainVegetationStructure = StructureType.AcaciaTree,
+                PrimaryVegetationStructure = StructureType.AcaciaTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.ViligerHut,
 
@@ -329,7 +364,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(15, 45),
                 HumidityRange = new Vector2(66, 100),
 
-                MainVegetationStructure = StructureType.JungleTree,
+                PrimaryVegetationStructure = StructureType.JungleTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.ViligerHut,
 
@@ -346,7 +381,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 45),
                 HumidityRange = new Vector2(0, 100),
 
-                MainVegetationStructure = StructureType.SpruceTree,
+                PrimaryVegetationStructure = StructureType.SpruceTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.Iglu,
 
@@ -363,7 +398,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 45),
                 HumidityRange = new Vector2(0, 100),
 
-                MainVegetationStructure = StructureType.None,
+                PrimaryVegetationStructure = StructureType.None,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.Iglu,
 

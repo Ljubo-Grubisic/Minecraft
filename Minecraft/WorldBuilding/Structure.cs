@@ -3,7 +3,6 @@ using Minecraft.System;
 using OpenTK.Mathematics;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Minecraft.WorldBuilding
 {
@@ -32,33 +31,31 @@ namespace Minecraft.WorldBuilding
         public static bool SaveBulding = false;
         private static Dictionary<StructureType, List<StructureSave>> StructureSaves = new Dictionary<StructureType, List<StructureSave>>();
 
-        private static Dictionary<Vector2i, List<BlockStruct>> ChunkColumnGhostBlocks = new Dictionary<Vector2i, List<BlockStruct>>();
+        private static Dictionary<Vector2i, List<(BlockStruct, bool)>> ChunkColumnGhostBlocks = new Dictionary<Vector2i, List<(BlockStruct, bool)>>();
         private static Dictionary<Vector2i, List<(Vector2i Position, StructureType Structure, int StructureIndex)>> StructuresGenerated = new Dictionary<Vector2i, List<(Vector2i Position, StructureType Structure, int StructureIndex)>>();
-
-        private static NoiseMap Random;
 
         static Structure()
         {
             InitStructureBlocks();
-            Random = new NoiseMap(WorldGenerator.Seed, 0.25f, FastNoiseLite.NoiseType.OpenSimplex2);
             Player.PlayerChangeBlock += Player_PlayerChangeBlock;
         }
 
-        internal static void AddVegetation(NoiseMap vegetation, ref Dictionary<Vector3i, BlockType> blocks, Vector2i chunkColumnPosition, int[,] height, BiomeType[,] biome, int waterLevel)
+        internal static void AddVegetation(NoiseMap vegetation, ref Dictionary<Vector3i, BlockType> blocks, Vector2i chunkColumnPosition,
+            int[,] height, BiomeType[,] biome, int waterLevel)
         {
             int xChunk = chunkColumnPosition.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
             int yChunk = chunkColumnPosition.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
 
             int numStructures = vegetation.ConvertMapedValueToIntScale(vegetation.GetMapedNoiseValue(xChunk, yChunk), 0, 4);
-            float[,] randomData = Random.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+            float[,] randomData = WorldGenerator.Random.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
 
-            List<(Vector2i, float)> vegetationDataList = new List<(Vector2i, float)>();
+            List<(Vector2i Position, float Value)> vegetationData = new List<(Vector2i, float)>();
             for (int i = 0; i < ChunkColumn.ChunkSize; i++)
             {
                 for (int j = 0; j < ChunkColumn.ChunkSize; j++)
                 {
                     if (height[i, j] > waterLevel)
-                        vegetationDataList.Add((new Vector2i(i, j), randomData[i, j]));
+                        vegetationData.Add((new Vector2i(i, j), randomData[i, j]));
                 }
             }
 
@@ -78,7 +75,7 @@ namespace Minecraft.WorldBuilding
                             {
                                 value.Position += new Vector2i(i * ChunkColumn.ChunkSize, j * ChunkColumn.ChunkSize);
                                 allStructurePositions.Add(value);
-                                vegetationDataList.Add(((value.Position.X, value.Position.Y), -1));
+                                vegetationData.Add(((value.Position.X, value.Position.Y), -1));
                             });
                         }
                     }
@@ -86,12 +83,12 @@ namespace Minecraft.WorldBuilding
             }
 
             // Remove blocks that are near structures that are generated
-            RemoveNotSpawnableBlocksFast(ref vegetationDataList, allStructurePositions, height, biome);
+            RemoveNotSpawnableBlocksFast(ref vegetationData, allStructurePositions, height, biome);
 
             // Remove items that are not in the chunk 
-            vegetationDataList = vegetationDataList.Remove((value) =>
+            vegetationData = vegetationData.Remove((value) =>
             {
-                if (value.Item2 == -1)
+                if (value.Value == -1)
                     return true; return false;
             });
 
@@ -99,27 +96,28 @@ namespace Minecraft.WorldBuilding
             List<(Vector2i Position, StructureType Structure, int StructureIndex)> validStructures = new List<(Vector2i Position, StructureType Structure, int StructureIndex)>();
             for (int i = 0; i < numStructures; i++)
             {
-                if (vegetationDataList.Count > 0)
+                if (vegetationData.Count > 0)
                 {
                     // Sort the vegetationDataList with the vegetation value going from largest to smallest
-                    vegetationDataList.Sort((item1, item2) =>
+                    vegetationData.Sort((item1, item2) =>
                     {
-                        if (item1.Item2 < item2.Item2)
+                        if (item1.Value < item2.Value)
                             return -1;
-                        if (item1.Item2 == item2.Item2)
+                        if (item1.Value == item2.Value)
                             return 0;
                         return 1;
                     });
 
-                    Vector2i index = vegetationDataList[0].Item1;
-                    StructureType structureType = Biome.GetBiomeConfig(biome[vegetationDataList[0].Item1.X, vegetationDataList[0].Item1.Y]).MainVegetationStructure;
+                    Vector2i index = vegetationData[0].Position;
+                    StructureType structureType = Biome.GetBiomeConfigStructureByPosition(biome[vegetationData[0].Position.X, vegetationData[0].Position.Y], vegetationData[0].Position);
+
                     if (structureType != StructureType.None)
                     {
                         Vector3i position = new Vector3i(index.X, height[index.X, index.Y] + 1, index.Y);
                         int structureIndex = AddStructure(ref blocks, structureType, position, chunkColumnPosition);
                         validStructures.Add((new Vector2i(index.X, index.Y), structureType, structureIndex));
 
-                        RemoveNotSpawnableBlocksFast(ref vegetationDataList, allStructurePositions, height, biome);
+                        RemoveNotSpawnableBlocksFast(ref vegetationData, allStructurePositions, height, biome);
                     }
                 }
             }
@@ -135,9 +133,98 @@ namespace Minecraft.WorldBuilding
             }
         }
 
+        internal static void AddRareStructure(ref Dictionary<Vector3i, BlockType> blocks, Vector2i chunkColumnPosition, int[,] height, BiomeType[,] biome, int waterLevel, int chanceOutOf100)
+        {
+            int randomNumber = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(chunkColumnPosition.X, chunkColumnPosition.Y), -1, 101);
+
+            if (randomNumber < chanceOutOf100)
+            {
+                int xChunk = chunkColumnPosition.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+                int yChunk = chunkColumnPosition.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+
+                float[,] randomData = WorldGenerator.Random.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+
+                List<(Vector2i Position, float Value)> structureData = new List<(Vector2i, float)>();
+                for (int i = 0; i < ChunkColumn.ChunkSize; i++)
+                {
+                    for (int j = 0; j < ChunkColumn.ChunkSize; j++)
+                    {
+                        structureData.Add((new Vector2i(i, j), randomData[i, j]));
+                    }
+                }
+
+                // Remove spaces that are ocupied by structures in outher chunks
+                List<(Vector2i Position, StructureType Structure, int StructureIndex)>? positions = new List<(Vector2i Position, StructureType Structure, int StructureIndex)>();
+                List<(Vector2i Position, StructureType Structure, int StructureIndex)> allStructurePositions = new List<(Vector2i Position, StructureType Structure, int StructureIndex)>();
+                for (int i = -1; i < 2; i++)
+                {
+                    for (int j = -1; j < 2; j++)
+                    {
+                        // Get all structures that are generated near this chunk -> allStructPositions
+                        if (StructuresGenerated.TryGetValue(chunkColumnPosition + new Vector2i(i, j), out positions))
+                        {
+                            positions.ForEach((value) =>
+                            {
+                                value.Position += new Vector2i(i * ChunkColumn.ChunkSize, j * ChunkColumn.ChunkSize);
+                                allStructurePositions.Add(value);
+                                structureData.Add(((value.Position.X, value.Position.Y), -1));
+                            });
+                        }
+                    }
+                }
+
+                // Remove blocks that are near structures that are generated
+                RemoveNotSpawnableBlocksRareFast(ref structureData, allStructurePositions, height, biome);
+
+                // Remove items that are not in the chunk 
+                structureData = structureData.Remove((value) =>
+                {
+                    if (value.Value == -1)
+                        return true; return false;
+                });
+
+                (Vector2i Position, StructureType Structure, int StructureIndex)? validStructures = null;
+                if (structureData.Count > 0)
+                {
+                    // Sort the vegetationDataList with the vegetation value going from largest to smallest
+                    structureData.Sort((item1, item2) =>
+                    {
+                        if (item1.Value < item2.Value)
+                            return -1;
+                        if (item1.Value == item2.Value)
+                            return 0;
+                        return 1;
+                    });
+
+                    Vector2i index = structureData[0].Position;
+                    StructureType structureType = Biome.GetBiomeConfig(biome[structureData[0].Position.X, structureData[0].Position.Y]).RareStructure;
+
+                    if (structureType != StructureType.None)
+                    {
+                        Vector3i position = new Vector3i(index.X, height[index.X, index.Y] + 1, index.Y);
+                        int structureIndex = AddStructure(ref blocks, structureType, position, chunkColumnPosition, true);
+                        validStructures = (new Vector2i(index.X, index.Y), structureType, structureIndex);
+
+                        RemoveNotSpawnableBlocksRareFast(ref structureData, allStructurePositions, height, biome);
+                    }
+                }
+
+                if (validStructures != null)
+                {
+                    if (StructuresGenerated.TryGetValue(chunkColumnPosition, out List<(Vector2i Position, StructureType Structure, int StructureIndex)>? value))
+                    {
+                        value.Add(((Vector2i Position, StructureType Structure, int StructureIndex))validStructures);
+                        StructuresGenerated[chunkColumnPosition] = value;
+                    }
+                    else
+                        StructuresGenerated.Add(chunkColumnPosition, new List<(Vector2i Position, StructureType Structure, int StructureIndex)> { ((Vector2i Position, StructureType Structure, int StructureIndex))validStructures });
+                }
+            }
+        }
+
         internal static void UnloadChunk()
         {
-            List<KeyValuePair<Vector2i, List<BlockStruct>>> chunkColumnGhostBlocksList = ChunkColumnGhostBlocks.ToList();
+            List<KeyValuePair<Vector2i, List<(BlockStruct, bool)>>> chunkColumnGhostBlocksList = ChunkColumnGhostBlocks.ToList();
             List<int> indicies = new List<int>();
             for (int i = 0; i < chunkColumnGhostBlocksList.Count; i++)
             {
@@ -192,12 +279,19 @@ namespace Minecraft.WorldBuilding
 
         internal static void AddGhostBlocks(ref Dictionary<Vector3i, BlockType> blocks, Vector2i position)
         {
-            if (ChunkColumnGhostBlocks.TryGetValue(position, out List<BlockStruct>? ghostBlocks))
+            if (ChunkColumnGhostBlocks.TryGetValue(position, out List<(BlockStruct, bool)>? ghostBlocks))
             {
-                foreach (BlockStruct block in ghostBlocks)
+                foreach ((BlockStruct Block, bool Overwrite) block in ghostBlocks)
                 {
-                    if (block.Type != BlockType.Air)
-                        blocks[block.Position] = block.Type;
+                    if (block.Overwrite)
+                    {
+                        blocks[block.Block.Position] = block.Block.Type;
+                    }
+                    else
+                    {
+                        if (block.Block.Type != BlockType.Air)
+                            blocks[block.Block.Position] = block.Block.Type;
+                    }
                 }
             }
         }
@@ -257,19 +351,23 @@ namespace Minecraft.WorldBuilding
             if (numLists == -1)
                 throw new Exception("Invalid structure type, this structure type has no block lists or isnt loaded");
 
-            int index = Random.ConvertMapedValueToIntScale(Random.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), 0, numLists);
+            int index = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), -1, numLists);
             if (index == numLists)
                 index = numLists - 1;
+            if (index == -1)
+                index = 0;
 
             return index;
         }
 
         private static List<BlockStruct> RotateBlocksAlgorithm(List<BlockStruct> blocks, Vector3i structurePosition)
         {
-            int rotationIndex = Random.ConvertMapedValueToIntScale(Random.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), 0, 5);
+            int rotationIndex = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), -1, 5);
 
             if (rotationIndex == 5)
                 rotationIndex = 4;
+            if (rotationIndex == -1)
+                rotationIndex = 0;
 
             List<BlockStruct> rotatedBlocks = RotateBlocks(blocks, rotationIndex * 90);
 
@@ -333,7 +431,7 @@ namespace Minecraft.WorldBuilding
                     {
                         if (vegetationValue.Value != -1)
                         {
-                            StructureType type = Biome.GetBiomeConfig(biome[vegetationValue.Position.X, vegetationValue.Position.Y]).MainVegetationStructure;
+                            StructureType type = Biome.GetBiomeConfig(biome[vegetationValue.Position.X, vegetationValue.Position.Y]).PrimaryVegetationStructure;
                             int index = GetIndexForStructure(type, new Vector3i(vegetationValue.Position.X, height[vegetationValue.Position.X, vegetationValue.Position.Y] + 1, vegetationValue.Position.Y));
                             List<Vector2i> localStructureArea = localStructureArea = GetAreaByStructure(type, index);
 
@@ -370,7 +468,8 @@ namespace Minecraft.WorldBuilding
                     if (value.Value != -1)
                     {
                         int spacing = GetSizeByStructure(allStructurePositions[j].Structure, allStructurePositions[j].StructureIndex);
-                        StructureType type = Biome.GetBiomeConfig(biome[value.Position.X, value.Position.Y]).MainVegetationStructure;
+                        StructureType type = Biome.GetBiomeConfigStructureByPosition(biome[value.Position.X, value.Position.Y], value.Position);
+
                         if (type != StructureType.None)
                         {
                             int index = GetIndexForStructure(type, new Vector3i(value.Position.X, height[value.Position.X, value.Position.Y] + 1, value.Position.Y));
@@ -390,11 +489,43 @@ namespace Minecraft.WorldBuilding
             });
         }
 
-        private static int AddStructure(ref Dictionary<Vector3i, BlockType> blocks, StructureType structureType, Vector3i strucuturePosition, Vector2i chunkColumnPosition)
+        private static void RemoveNotSpawnableBlocksRareFast(ref List<(Vector2i, float)> listOfValues, List<(Vector2i Position, StructureType Structure, int StructureIndex)> allStructurePositions, int[,] height, BiomeType[,] biome)
+        {
+            listOfValues = listOfValues.Remove(((Vector2i Position, float Value) value) =>
+            {
+                for (int j = 0; j < allStructurePositions.Count; j++)
+                {
+                    if (value.Value != -1)
+                    {
+                        int spacing = GetSizeByStructure(allStructurePositions[j].Structure, allStructurePositions[j].StructureIndex);
+                        StructureType type = Biome.GetBiomeConfig(biome[value.Position.X, value.Position.Y]).RareStructure;
+
+                        if (type != StructureType.None)
+                        {
+                            int index = GetIndexForStructure(type, new Vector3i(value.Position.X, height[value.Position.X, value.Position.Y] + 1, value.Position.Y));
+                            spacing += GetSizeByStructure(type, index);
+
+                            if (Math.Abs(value.Position.X - allStructurePositions[j].Position.X) < spacing
+                            && Math.Abs(value.Position.Y - allStructurePositions[j].Position.Y) < spacing)
+                                return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return false;
+            });
+        }
+
+        private static int AddStructure(ref Dictionary<Vector3i, BlockType> blocks, StructureType structureType, Vector3i strucuturePosition, Vector2i chunkColumnPosition, bool overwrite = false)
         {
             int index = GetIndexForStructure(structureType, strucuturePosition);
 
             List<BlockStruct> structureBlocks = GetBlocksByStructure(structureType, index);
+            structureBlocks = RotateBlocksAlgorithm(structureBlocks, strucuturePosition);
+
             bool isBlockXPositive, isBlockXNegative, isBlockZPositive, isBlockZNegative;
 
             foreach (BlockStruct block in structureBlocks)
@@ -402,17 +533,26 @@ namespace Minecraft.WorldBuilding
                 Vector3i blockPosition = block.Position + strucuturePosition;
                 if (!ChunkColumn.IsOutOfRange(blockPosition))
                 {
-                    if (blocks[blockPosition] == BlockType.Air)
+                    if (overwrite)
+                    {
                         blocks[blockPosition] = block.Type;
+                    }
+                    else
+                    {
+                        if (blocks[blockPosition] == BlockType.Air)
+                            blocks[blockPosition] = block.Type;
+                    }
                 }
                 else
                 {
-                    Vector2i chunkColumnPositionNeighbor = new Vector2i();
                     Vector3i blockPositionNeigbor = blockPosition;
                     bool isOutOfRange = false;
 
+                    Vector2i chunkColumnPositionNeighbor;
+
                     do
                     {
+                        chunkColumnPositionNeighbor = new Vector2i();
                         isBlockXPositive = blockPositionNeigbor.X > ChunkColumn.ChunkSize - 1;
                         isBlockXNegative = blockPositionNeigbor.X < 0;
 
@@ -432,6 +572,7 @@ namespace Minecraft.WorldBuilding
                         blockPositionNeigbor.X -= chunkColumnPositionNeighbor.X * ChunkColumn.ChunkSize;
                         blockPositionNeigbor.Z -= chunkColumnPositionNeighbor.Y * ChunkColumn.ChunkSize;
 
+
                         isOutOfRange = blockPositionNeigbor.X > ChunkColumn.ChunkSize - 1 || blockPositionNeigbor.X < 0 ||
                             blockPositionNeigbor.Z > ChunkColumn.ChunkSize - 1 || blockPositionNeigbor.Z < 0;
                     } while (isOutOfRange);
@@ -439,18 +580,27 @@ namespace Minecraft.WorldBuilding
                     ChunkColumn? chunkColumnNeigbor = ChunkManager.GetChunkColumn(chunkColumnPositionNeighbor + chunkColumnPosition);
                     if (chunkColumnNeigbor != null)
                     {
-                        if (chunkColumnNeigbor.GetBlockType(blockPositionNeigbor) == BlockType.Air)
+                        if (overwrite)
+                        {
                             ChunkManager.ChangeBlock(chunkColumnNeigbor.Position, new BlockStruct { Position = blockPositionNeigbor, Type = block.Type }, false);
+                        }
+                        else
+                        {
+                            if (chunkColumnNeigbor.GetBlockType(blockPositionNeigbor) == BlockType.Air)
+                                ChunkManager.ChangeBlock(chunkColumnNeigbor.Position, new BlockStruct { Position = blockPositionNeigbor, Type = block.Type }, false);
+                        }
                     }
                     else
                     {
                         if (!ChunkColumnGhostBlocks.ContainsKey(chunkColumnPositionNeighbor + chunkColumnPosition))
                         {
-                            ChunkColumnGhostBlocks.Add(chunkColumnPositionNeighbor + chunkColumnPosition, new List<BlockStruct> { new BlockStruct { Position = blockPositionNeigbor, Type = block.Type } });
+                            ChunkColumnGhostBlocks.Add(chunkColumnPositionNeighbor + chunkColumnPosition,
+                                new List<(BlockStruct, bool)> { (new BlockStruct { Position = blockPositionNeigbor, Type = block.Type }, overwrite) });
                         }
                         else
                         {
-                            ChunkColumnGhostBlocks[chunkColumnPositionNeighbor + chunkColumnPosition].Add(new BlockStruct { Position = blockPositionNeigbor, Type = block.Type });
+                            ChunkColumnGhostBlocks[chunkColumnPositionNeighbor + chunkColumnPosition].Add(
+                                (new BlockStruct { Position = blockPositionNeigbor, Type = block.Type }, overwrite));
                         }
                     }
                 }
@@ -495,7 +645,6 @@ namespace Minecraft.WorldBuilding
             {
                 if (save.Blocks != null)
                 {
-                    save.Type = StructureType.OakTree;
                     save.Blocks.Add(new BlockStruct() { Position = args.BlockPosition - firstBlockPosition, Type = args.Type });
                 }
                 else
@@ -546,14 +695,37 @@ namespace Minecraft.WorldBuilding
             LoadStructureSaves(StructureType.JungleTree, "JungleTree", 6);
             LoadStructureSaves(StructureType.OakTree, "OakTree", 5);
             LoadStructureSaves(StructureType.SpruceTree, "SpruceTree", 8);
+
+            LoadStructureSaves(StructureType.SandCastle, "SandCastle", 1);
+            LoadStructureSaves(StructureType.Iglu, "Iglu", 1);
+            LoadStructureSaves(StructureType.SunkenShip, "SunkenShip", 1);
+            LoadStructureSaves(StructureType.ViligerHut, "ViligerHut", 1);
         }
 
         private static void LoadStructureSaves(StructureType stuctureType, string structureName, int numStructure)
         {
-            List<StructureSave> structureSaves = new List<StructureSave>();
-            for (int i = 1; i <= numStructure; i++)
+            if (numStructure > 1)
             {
-                StructureSave? save = LoadStructureSave(structureName + "." + structureName + i + ".xml");
+                List<StructureSave> structureSaves = new List<StructureSave>();
+                for (int i = 1; i <= numStructure; i++)
+                {
+                    StructureSave? save = LoadStructureSave(structureName + "." + structureName + i + ".xml");
+
+                    if (save != null)
+                    {
+                        structureSaves.Add(save);
+                    }
+                    else
+                    {
+                        throw new Exception("Falied loading structures");
+                    }
+                }
+                StructureSaves.Add(stuctureType, structureSaves);
+            }
+            else
+            {
+                List<StructureSave> structureSaves = new List<StructureSave>();
+                StructureSave? save = LoadStructureSave("Rare" + "." + structureName + ".xml");
 
                 if (save != null)
                 {
@@ -563,8 +735,9 @@ namespace Minecraft.WorldBuilding
                 {
                     throw new Exception("Falied loading structures");
                 }
+
+                StructureSaves.Add(stuctureType, structureSaves);
             }
-            StructureSaves.Add(stuctureType, structureSaves);
         }
 
         private static StructureSave? LoadStructureSave(string fileName)

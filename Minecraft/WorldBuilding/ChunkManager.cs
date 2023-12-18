@@ -34,7 +34,7 @@ namespace Minecraft.WorldBuilding
 
         private static readonly Func<KeyValuePair<Vector2i, ChunkColumn>, bool> keyRemoverDictionaryByDistance = chunk =>
         {
-            return GetDistanceFromPlayer(chunk.Value.Position) > (Program.Minecraft.Player.RenderDistance / 2.0f);
+            return GetDistanceFromPlayer(chunk.Value.Position) > (Program.Minecraft.Player.RenderDistance + 3 / 2.0f);
         };
 
         private static Thread ChunkManagingThread;
@@ -192,25 +192,35 @@ namespace Minecraft.WorldBuilding
                                 }
                             }
 
-                            if (ChunksWaitingToBake.Count != 0)
+                            for (int i = 0; i < 2; i++)
                             {
-                                ChunkColumn chunkBaked;
-                                do
+                                if (ChunksWaitingToBake.Count != 0)
                                 {
-                                    chunkBaked = ChunksWaitingToBake.Dequeue();
-                                    chunkBaked.IsBaking = true;
-                                }
-                                while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
+                                    ChunkColumn chunkBaked;
+                                    do
+                                    {
+                                        chunkBaked = ChunksWaitingToBake.Dequeue();
+                                        chunkBaked.IsBaking = true;
+                                    }
+                                    while ((ChunksWaitingToUnload.Contains(chunkBaked.Position) || chunkBaked.IsUnloaded) && ChunksWaitingToBake.Count != 0);
 
-                                if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
-                                {
-                                    BakeChunk(chunkBaked);
+                                    if (!ChunksWaitingToUnload.Contains(chunkBaked.Position) || !chunkBaked.IsUnloaded)
+                                    {
+                                        BakeChunk(chunkBaked);
+                                    }
                                 }
+
                             }
 
                             break;
 
                         case ChunkLoadingStep.Unload:
+
+                            if ((ChunksWaitingToBake.Count > 1000 || ChunksWaitingToGenerate.Count > 1000) && !(ChunksWaitingToUnload.Count > 500))
+                            {
+                                chunkLoadingSteps = ChunkLoadingStep.None;
+                                break;
+                            }
 
                             if (ChunksWaitingToUnload.Count != 0)
                             {
@@ -227,6 +237,7 @@ namespace Minecraft.WorldBuilding
                                         ChunksWaitingToBake.Enqueue(neighbor);
                                 }
                             }
+
                             chunkLoadingSteps = ChunkLoadingStep.None;
                             break;
                     }

@@ -32,6 +32,10 @@
     <None Remove="Resources\Structures\OakTree\OakTree3.xml" />
     <None Remove="Resources\Structures\OakTree\OakTree4.xml" />
     <None Remove="Resources\Structures\OakTree\OakTree5.xml" />
+    <None Remove="Resources\Structures\Rare\Iglu.xml" />
+    <None Remove="Resources\Structures\Rare\SandCastle.xml" />
+    <None Remove="Resources\Structures\Rare\SunkenShip.xml" />
+    <None Remove="Resources\Structures\Rare\ViligerHut.xml" />
     <None Remove="Resources\Structures\SpruceTree\SpruceTree1.xml" />
     <None Remove="Resources\Structures\SpruceTree\SpruceTree2.xml" />
     <None Remove="Resources\Structures\SpruceTree\SpruceTree3.xml" />
@@ -65,6 +69,10 @@
     <EmbeddedResource Include="Resources\Structures\OakTree\OakTree3.xml" />
     <EmbeddedResource Include="Resources\Structures\OakTree\OakTree4.xml" />
     <EmbeddedResource Include="Resources\Structures\OakTree\OakTree5.xml" />
+    <EmbeddedResource Include="Resources\Structures\Rare\Iglu.xml" />
+    <EmbeddedResource Include="Resources\Structures\Rare\SandCastle.xml" />
+    <EmbeddedResource Include="Resources\Structures\Rare\SunkenShip.xml" />
+    <EmbeddedResource Include="Resources\Structures\Rare\ViligerHut.xml" />
     <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree1.xml" />
     <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree2.xml" />
     <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree3.xml" />

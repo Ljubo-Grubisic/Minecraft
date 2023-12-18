@@ -105,6 +105,7 @@ namespace GameEngine.Rendering
 
         internal void UpdateKeys(MouseState mouse, KeyboardState keyboard, float time)
         {
+            float addedSpeed = 1;
             Yaw += MathHelper.Clamp(mouse.Delta.X * Sensitivity, -89, 89);
             Pitch += MathHelper.Clamp(-mouse.Delta.Y * Sensitivity, -89, 89);
 
@@ -119,29 +120,33 @@ namespace GameEngine.Rendering
 
             //Zoom += mouse.ScrollDelta.Y;
 
+            if (keyboard.IsKeyDown(Keys.LeftShift))
+            {
+                addedSpeed = 3;
+            }
             if (keyboard.IsKeyDown(Keys.Space))
             {
-                Position += new Vector3(0.0f, Speed * time, 0.0f);
+                Position += new Vector3(0.0f, Speed * addedSpeed * time, 0.0f);
             }
             if (keyboard.IsKeyDown(Keys.LeftControl))
             {
-                Position -= new Vector3(0.0f, Speed * time, 0.0f);
+                Position -= new Vector3(0.0f, Speed * addedSpeed * time, 0.0f);
             }
             if (keyboard.IsKeyDown(Keys.W))
             {
-                Position += Speed * time * Front;
+                Position += Speed * addedSpeed * time * Vector3.Normalize(Vector3.Cross(Vector3.UnitY, Right));
             }
             if (keyboard.IsKeyDown(Keys.S))
             {
-                Position -= Speed * time * Front;
+                Position -= Speed * addedSpeed * time * Vector3.Normalize(Vector3.Cross(Vector3.UnitY, Right));
             }
             if (keyboard.IsKeyDown(Keys.A))
             {
-                Position -= Speed * time * Vector3.Normalize(Vector3.Cross(Front, Up));
+                Position -= Speed * addedSpeed * time * Vector3.Normalize(Vector3.Cross(Front, Up));
             }
             if (keyboard.IsKeyDown(Keys.D))
             {
-                Position += Speed * time * Vector3.Normalize(Vector3.Cross(Front, Up));
+                Position += Speed * addedSpeed * time * Vector3.Normalize(Vector3.Cross(Front, Up));
             }
         }
 

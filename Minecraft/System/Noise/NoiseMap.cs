@@ -95,7 +95,7 @@ namespace Minecraft.System
             Vector2 spline2 = this.Splines.ValueOfGreater(noiseData);
 
             if (spline1 == spline2)
-                return noiseData;
+                return spline1.Y;
 
             float data = (((spline2.Y - spline1.Y) / (spline2.X - spline1.X)) * (noiseData - spline1.X)) + spline1.Y;
 

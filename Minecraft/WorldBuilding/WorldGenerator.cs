@@ -8,6 +8,8 @@ namespace Minecraft.WorldBuilding
         internal static int Seed { get; private set; } = 0;
         internal static int WaterLevel { get; private set; } = 50;
 
+        internal static NoiseMap Random { get; private set; }
+
         private static NoiseMap Continentalness { get; set; }
         private static NoiseMap Vegetation { get; set; }
 
@@ -16,6 +18,8 @@ namespace Minecraft.WorldBuilding
 
         static WorldGenerator()
         {
+            Random = new NoiseMap(WorldGenerator.Seed, 2f, FastNoiseLite.NoiseType.OpenSimplex2);
+
             {
                 (double, double) A = (0.0646594264678, 0.0421697707709);
                 (double, double) B = (0.2529110529704, 0.0672673482315);
@@ -47,6 +51,7 @@ namespace Minecraft.WorldBuilding
         {
             int xChunk = chunk.Position.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
             int yChunk = chunk.Position.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
+
 
             float[,] mapedHeightData = Continentalness.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
             int[,] height = Continentalness.ConvertMapedDataToIntScale(mapedHeightData, 0, ChunkColumn.Height);

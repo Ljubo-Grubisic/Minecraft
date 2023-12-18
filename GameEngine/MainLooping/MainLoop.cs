@@ -48,6 +48,10 @@ namespace GameEngine.MainLooping
             {
                 this.WindowState = WindowState.Normal;
             }
+            if (KeyboardManager.IsKeyDown(Keys.LeftAlt) && KeyboardManager.IsKeyDown(Keys.F4))
+            {
+                this.Close();
+            }
 
             KeyboardManager.Update();
         }
