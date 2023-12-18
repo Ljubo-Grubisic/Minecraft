@@ -3,6 +3,7 @@ using Minecraft.System;
 using OpenTK.Mathematics;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Minecraft.WorldBuilding
 {
@@ -765,6 +766,7 @@ namespace Minecraft.WorldBuilding
                     {
                         StructureSave? save = (StructureSave?)serializer.ReadObject(stream);
                         stream.Dispose();
+
                         if (save != null)
                         {
                             save.Area = new List<Vector2i>();
@@ -812,16 +814,10 @@ namespace Minecraft.WorldBuilding
         private class StructureSave
         {
             [DataMember]
-            public StructureType Type { get; set; }
-            [DataMember]
-            public List<BlockStruct> Blocks { get; set; }
+            public List<BlockStruct> Blocks { get; set; } = new List<BlockStruct>();
+
             public List<Vector2i> Area { get; set; } = new List<Vector2i>();
             public int Size;
-
-            public StructureSave()
-            {
-                Blocks = new List<BlockStruct>();
-            }
         }
         #endregion
     }

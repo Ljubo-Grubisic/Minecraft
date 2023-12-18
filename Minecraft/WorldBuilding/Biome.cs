@@ -114,7 +114,7 @@ namespace Minecraft.WorldBuilding
             }
 
             Structure.AddVegetation(vegetation, ref blocks, chunkPosition, height, biome, WorldGenerator.WaterLevel);
-            Structure.AddRareStructure(ref blocks, chunkPosition, height, biome, WorldGenerator.WaterLevel, 30);
+            Structure.AddRareStructure(ref blocks, chunkPosition, height, biome, WorldGenerator.WaterLevel, 5);
 
             return blocks;
         }

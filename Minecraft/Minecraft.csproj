@@ -34,6 +34,7 @@
     <None Remove="Resources\Structures\OakTree\OakTree5.xml" />
     <None Remove="Resources\Structures\Rare\Iglu.xml" />
     <None Remove="Resources\Structures\Rare\SandCastle.xml" />
+    <None Remove="Resources\Structures\Rare\SandCastleLarge.xml" />
     <None Remove="Resources\Structures\Rare\SunkenShip.xml" />
     <None Remove="Resources\Structures\Rare\ViligerHut.xml" />
     <None Remove="Resources\Structures\SpruceTree\SpruceTree1.xml" />
@@ -71,6 +72,7 @@
     <EmbeddedResource Include="Resources\Structures\OakTree\OakTree5.xml" />
     <EmbeddedResource Include="Resources\Structures\Rare\Iglu.xml" />
     <EmbeddedResource Include="Resources\Structures\Rare\SandCastle.xml" />
+    <EmbeddedResource Include="Resources\Structures\Rare\SandCastleLarge.xml" />
     <EmbeddedResource Include="Resources\Structures\Rare\SunkenShip.xml" />
     <EmbeddedResource Include="Resources\Structures\Rare\ViligerHut.xml" />
     <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree1.xml" />
@@ -92,9 +94,6 @@
 
   <ItemGroup>
     <None Update="Resources\Textures.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\TexturesNum.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Shaders\fragment_shaderHUD.glsl">

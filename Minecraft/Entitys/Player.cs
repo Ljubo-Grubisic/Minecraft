@@ -41,7 +41,7 @@ namespace Minecraft.Entitys
 
             if (MouseManager.OnButtonPressed(MouseButton.Left))
             {
-                Vector3i? rayCastData = RayCaster.FindBlockLookingAt(camera.Position, camera.Front, (RenderDistance * ChunkColumn.ChunkSize) / 6);
+                Vector3i? rayCastData = RayCaster.FindBlockLookingAt(camera.Position, camera.Front, 12);
                 if (rayCastData != null)
                 {
                     ChunkManager.ChangeBlock(new BlockStruct { Position = (Vector3i)rayCastData, Type = BlockType.Air }, true);
@@ -50,7 +50,7 @@ namespace Minecraft.Entitys
             }
             if (MouseManager.OnButtonPressed(MouseButton.Right))
             {
-                Vector3i? rayCastData = RayCaster.FindBlockLookingOut(camera.Position, camera.Front, (RenderDistance * ChunkColumn.ChunkSize) / 6);
+                Vector3i? rayCastData = RayCaster.FindBlockLookingOut(camera.Position, camera.Front, 12);
                 if (rayCastData != null)
                 {
                     ChunkManager.ChangeBlock(new BlockStruct { Position = (Vector3i)rayCastData, Type = InHand }, true);
