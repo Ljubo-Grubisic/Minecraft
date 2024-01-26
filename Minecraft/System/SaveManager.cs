@@ -1,5 +1,6 @@
 ﻿using Minecraft.WorldBuilding;
 using OpenTK.Mathematics;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace Minecraft.System
@@ -10,15 +11,8 @@ namespace Minecraft.System
 
         static SaveManager()
         {
-            if (!Directory.Exists(SaveDirectory))
-            {
-                Directory.CreateDirectory(SaveDirectory);
-            }
-            if (!File.Exists(SaveDirectory + "/chunks.xml"))
-            {
-                FileStream fileStream = File.Create(SaveDirectory + "/chunks.xml");
-                fileStream.Close();
-            }
+            EnsureDirectory(SaveDirectory);
+            EnsureFile(SaveDirectory + "/chunks.xml");
         }
 
         internal static Dictionary<Vector3i, BlockType> LoadChunk(Vector2i position)
@@ -87,6 +81,50 @@ namespace Minecraft.System
 
                 streamWriter.Dispose();
             }
+        }
+
+        internal static Stream GetStreamFormAssembly(string path)
+        {
+            Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
+
+            if (stream == null)
+                throw new Exception("Failed getting assemlby: " + path);
+
+            return stream;
+        }
+
+        /// <summary>
+        /// Ensures that the directory exists by creating it, if it 
+        /// doesnt exist
+        /// </summary>
+        /// <param name="localDirectory"></param>
+        /// <returns>True is the directory is created, false it the directory already
+        /// existed</returns>
+        internal static bool EnsureDirectory(string localDirectory)
+        {
+            if (!Directory.Exists(localDirectory))
+            {
+                Directory.CreateDirectory(localDirectory);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Ensures that the file exists by creating it, if it 
+        /// doesnt exist
+        /// </summary>
+        /// <param name="localDirectory"></param>
+        /// <returns>True is the file is created, false it the file already
+        /// existed</returns>
+        internal static bool EnsureFile(string localDirectory)
+        {
+            if (!File.Exists(localDirectory))
+            {
+                File.Create(localDirectory).Close();
+                return true;
+            }
+            return false;
         }
     }
 }

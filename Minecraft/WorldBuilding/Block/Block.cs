@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace Minecraft.WorldBuilding
 {
@@ -71,18 +72,11 @@ namespace Minecraft.WorldBuilding
         X
     }
 
-    [DataContract]
+    [Serializable]
     internal struct BlockStruct
     {
-        [DataMember]
         internal Vector3i Position;
-        [DataMember]
         internal BlockType Type;
-
-        public override string ToString()
-        {
-            return "Position: " + this.Position + "Type: " + this.Type;
-        }
     }
 
     internal static class Block

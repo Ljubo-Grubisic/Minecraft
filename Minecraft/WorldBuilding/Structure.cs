@@ -37,7 +37,7 @@ namespace Minecraft.WorldBuilding
 
         static Structure()
         {
-            InitStructureBlocks();
+            InitStructureBlocksBinary();
             Player.PlayerChangeBlock += Player_PlayerChangeBlock;
         }
 
@@ -611,9 +611,10 @@ namespace Minecraft.WorldBuilding
         #endregion
 
         #region Creating and Loading StructureSaves
+        #region XML
         private static Vector3i firstBlockPosition;
         private static bool onStartup = true;
-        private static void CreateEditStructureSave(Player sender, PlayerChangeBlockEventArgs args)
+        private static void CreateEditStructureSaveXML(Player sender, PlayerChangeBlockEventArgs args)
         {
             if (onStartup)
             {
@@ -688,29 +689,29 @@ namespace Minecraft.WorldBuilding
             }
         }
 
-        private static void InitStructureBlocks()
+        private static void InitStructureBlocksXML()
         {
-            LoadStructureSaves(StructureType.AcaciaTree, "AcaciaTree", 3);
-            LoadStructureSaves(StructureType.BirchTree, "BirchTree", 4);
-            LoadStructureSaves(StructureType.Cactus, "Cactus", 4);
-            LoadStructureSaves(StructureType.JungleTree, "JungleTree", 6);
-            LoadStructureSaves(StructureType.OakTree, "OakTree", 5);
-            LoadStructureSaves(StructureType.SpruceTree, "SpruceTree", 8);
+            LoadStructureSavesXML(StructureType.AcaciaTree, "AcaciaTree", 3);
+            LoadStructureSavesXML(StructureType.BirchTree, "BirchTree", 4);
+            LoadStructureSavesXML(StructureType.Cactus, "Cactus", 4);
+            LoadStructureSavesXML(StructureType.JungleTree, "JungleTree", 6);
+            LoadStructureSavesXML(StructureType.OakTree, "OakTree", 5);
+            LoadStructureSavesXML(StructureType.SpruceTree, "SpruceTree", 8);
 
-            LoadStructureSaves(StructureType.SandCastle, "SandCastle", 1);
-            LoadStructureSaves(StructureType.Iglu, "Iglu", 1);
-            LoadStructureSaves(StructureType.SunkenShip, "SunkenShip", 1);
-            LoadStructureSaves(StructureType.ViligerHut, "ViligerHut", 1);
+            LoadStructureSavesXML(StructureType.SandCastle, "SandCastle", 2);
+            LoadStructureSavesXML(StructureType.Iglu, "Iglu", 1);
+            LoadStructureSavesXML(StructureType.SunkenShip, "SunkenShip", 1);
+            LoadStructureSavesXML(StructureType.ViligerHut, "ViligerHut", 1);
         }
 
-        private static void LoadStructureSaves(StructureType stuctureType, string structureName, int numStructure)
+        private static void LoadStructureSavesXML(StructureType stuctureType, string structureName, int numStructure)
         {
             if (numStructure > 1)
             {
                 List<StructureSave> structureSaves = new List<StructureSave>();
                 for (int i = 1; i <= numStructure; i++)
                 {
-                    StructureSave? save = LoadStructureSave(structureName + "." + structureName + i + ".xml");
+                    StructureSave? save = LoadStructureSaveXML(structureName + "." + structureName + i + ".xml");
 
                     if (save != null)
                     {
@@ -726,7 +727,7 @@ namespace Minecraft.WorldBuilding
             else
             {
                 List<StructureSave> structureSaves = new List<StructureSave>();
-                StructureSave? save = LoadStructureSave("Rare" + "." + structureName + ".xml");
+                StructureSave? save = LoadStructureSaveXML("Rare" + "." + structureName + ".xml");
 
                 if (save != null)
                 {
@@ -741,7 +742,7 @@ namespace Minecraft.WorldBuilding
             }
         }
 
-        private static StructureSave? LoadStructureSave(string fileName)
+        private static StructureSave? LoadStructureSaveXML(string fileName)
         {
             bool isFileEmpty = false;
 
@@ -801,23 +802,240 @@ namespace Minecraft.WorldBuilding
 
             return null;
         }
+        #endregion
 
+        #region Binary
+        private static void InitStructureBlocksBinary()
+        {
+            LoadStructureSavesBinary(StructureType.AcaciaTree, "AcaciaTree", 3);
+            LoadStructureSavesBinary(StructureType.BirchTree, "BirchTree", 4);
+            LoadStructureSavesBinary(StructureType.Cactus, "Cactus", 4);
+            LoadStructureSavesBinary(StructureType.JungleTree, "JungleTree", 6);
+            LoadStructureSavesBinary(StructureType.OakTree, "OakTree", 5);
+            LoadStructureSavesBinary(StructureType.SpruceTree, "SpruceTree", 8);
+                              
+            LoadStructureSavesBinary(StructureType.SandCastle, "SandCastle", 1);
+            LoadStructureSavesBinary(StructureType.Iglu, "Iglu", 1);
+            LoadStructureSavesBinary(StructureType.SunkenShip, "SunkenShip", 1);
+            LoadStructureSavesBinary(StructureType.ViligerHut, "ViligerHut", 1);
+        }
+
+        private static void LoadStructureSavesBinary(StructureType stuctureType, string structureName, int numStructure)
+        {
+            List<StructureSave> structureSaves = new List<StructureSave>();
+            for (int i = 0; i < numStructure; i++)
+            {
+                StructureSave? save = LoadStructureSaveBinary(structureName + "." + structureName + i + ".dat");
+
+                if (save != null)
+                {
+                    structureSaves.Add(save);
+                }
+                else
+                {
+                    throw new Exception("Falied loading structures");
+                }
+            }
+            StructureSaves.Add(stuctureType, structureSaves);
+        }
+
+        private static StructureSave? LoadStructureSaveBinary(string fileName)
+        {
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+
+            Stream stream = SaveManager.GetStreamFormAssembly("Minecraft.Resources.Structures.Dat." + fileName);
+
+            StructureSave? save = (StructureSave?)binaryFormatter.Deserialize(stream);
+
+            stream.Dispose();
+
+            if (save != null)
+            {
+                save.Area = new List<Vector2i>();
+                save.Blocks.RemoveDoubleXZ().ForEach((value) => { save.Area.Add(value.Position.Xz); });
+                int largestAreaPosition = -1;
+
+                foreach (Vector2i position in save.Area)
+                {
+                    Vector2i absolutePosition = new Vector2i(Math.Abs(position.X), Math.Abs(position.Y));
+
+                    if (absolutePosition.X > largestAreaPosition || absolutePosition.Y > largestAreaPosition)
+                    {
+                        if (absolutePosition.X > absolutePosition.Y)
+                            largestAreaPosition = absolutePosition.X;
+                        else
+                            largestAreaPosition = absolutePosition.Y;
+                    }
+                }
+                save.Size = largestAreaPosition;
+                return save;
+            }
+            throw new Exception("Failed loading structures");
+        }
+
+        private static void CreateEditStructureSaveBinary(Player sender, PlayerChangeBlockEventArgs args)
+        {
+            if (onStartup)
+            {
+                firstBlockPosition = args.BlockPosition;
+                onStartup = false;
+            }
+
+            SaveManager.EnsureDirectory(SaveManager.SaveDirectory);
+            bool newFileCreated = SaveManager.EnsureFile(SaveManager.SaveDirectory + "/structure.dat");
+            if (newFileCreated)
+                firstBlockPosition = args.BlockPosition;
+            
+
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+
+            StructureSave? save = new StructureSave();
+
+            Stream streamReader = File.OpenRead(SaveManager.SaveDirectory + "/structure.dat");
+
+            if (streamReader.Length > 0)
+                save = (StructureSave?)binaryFormatter.Deserialize(streamReader);
+
+            streamReader.Dispose();
+
+            if (save != null)
+            {
+                if (save.Blocks != null)
+                {
+                    save.Blocks.Add(new BlockStruct() { Position = args.BlockPosition - firstBlockPosition, Type = args.Type });
+                }
+                else
+                {
+                    List<BlockStruct> blocks = new List<BlockStruct>
+                    {
+                        new BlockStruct() { Position = args.BlockPosition - firstBlockPosition, Type = args.Type }
+                    };
+                    save.Blocks = blocks;
+                }
+
+
+                List<Vector3i> positions = new List<Vector3i>();
+                List<int> indicies = new List<int>();
+                for (int i = 0; i < save.Blocks.Count; i++)
+                {
+                    int index = positions.IndexOf(save.Blocks[i].Position);
+                    if (index != -1)
+                        indicies.Add(index);
+
+                    if (save.Blocks[i].Type == BlockType.Air)
+                        indicies.Add(i);
+
+                    positions.Add(save.Blocks[i].Position);
+                }
+                indicies.Sort();
+                indicies = indicies.Distinct().ToList();
+                for (int i = indicies.Count - 1; i >= 0; i--)
+                {
+                    save.Blocks.RemoveAt(indicies[i]);
+                }
+
+                File.Delete(SaveManager.SaveDirectory + "/structure.dat");
+
+                Stream streamWriter = File.OpenWrite(SaveManager.SaveDirectory + "/structure.dat");
+
+                binaryFormatter.Serialize(streamWriter, save);
+
+                streamWriter.Dispose();
+            }
+        }
+
+        private static void ConvertAllStructureSavesToBinary()
+        {
+            SaveManager.EnsureDirectory(SaveManager.SaveDirectory);
+            SaveManager.EnsureDirectory(SaveManager.SaveDirectory + "/bin");
+
+            ChangeXMLStructureSaveToBinary(StructureType.AcaciaTree, "AcaciaTree");
+            ChangeXMLStructureSaveToBinary(StructureType.BirchTree, "BirchTree");
+            ChangeXMLStructureSaveToBinary(StructureType.Cactus, "Cactus");
+            ChangeXMLStructureSaveToBinary(StructureType.JungleTree, "JungleTree");
+            ChangeXMLStructureSaveToBinary(StructureType.OakTree, "OakTree");
+            ChangeXMLStructureSaveToBinary(StructureType.SpruceTree, "SpruceTree");
+
+            ChangeXMLStructureSaveToBinary(StructureType.SandCastle, "SandCastle");
+            ChangeXMLStructureSaveToBinary(StructureType.Iglu, "Iglu");
+            ChangeXMLStructureSaveToBinary(StructureType.SunkenShip, "SunkenShip");
+            ChangeXMLStructureSaveToBinary(StructureType.ViligerHut, "ViligerHut");
+        }
+
+        private static void ChangeXMLStructureSaveToBinary(StructureType structureType, string structureName)
+        {
+            List<StructureSave> saves = StructureSaves[structureType];
+            SaveManager.EnsureDirectory(SaveManager.SaveDirectory + "/bin/" + structureName);
+
+            List<StructureSave> savesBin = ChangeFromBinToNormal(saves);
+
+            for (int i = 0; i < saves.Count; i++)
+            {
+                Stream stream = File.Open(SaveManager.SaveDirectory + "/bin/" + structureName + "/" + structureName + i + ".dat", FileMode.Create);
+
+                BinaryFormatter binaryFormatter = new BinaryFormatter();
+
+                binaryFormatter.Serialize(stream, savesBin[i]);
+
+                stream.Dispose();
+            }
+        }
+        #endregion
         private static void Player_PlayerChangeBlock(Player sender, PlayerChangeBlockEventArgs args)
         {
             if (SaveBulding)
             {
-                CreateEditStructureSave(sender, args);
+                CreateEditStructureSaveBinary(sender, args);
             }
         }
 
-        [DataContract]
-        private class StructureSave
+        public static List<StructureSave> ChangeFromBinToNormal(List<StructureSave> bin)
         {
-            [DataMember]
-            public List<BlockStruct> Blocks { get; set; } = new List<BlockStruct>();
+            List<StructureSave> result = new List<StructureSave>();
+            for (int i = 0; i < bin.Count; i++)
+            {
+                StructureSave structureSave = new StructureSave();
+                structureSave.Area = bin[i].Area;
+                structureSave.Size = bin[i].Size;
 
+                List<BlockStruct> blocks = new List<BlockStruct>();
+                for (int j = 0; j < bin[i].Blocks.Count; j++)
+                {
+                    BlockStruct block = new BlockStruct
+                    {
+                        Position = bin[i].Blocks[j].Position,
+                        Type = bin[i].Blocks[j].Type
+                    };
+
+                    blocks.Add(block);
+                }
+                structureSave.Blocks = blocks;
+
+                result.Add(structureSave);
+            }
+
+            return result;
+        }
+
+        [Serializable()]
+        public class StructureSave : ISerializable
+        {
+            public List<BlockStruct> Blocks { get; set; } = new List<BlockStruct>();
             public List<Vector2i> Area { get; set; } = new List<Vector2i>();
             public int Size;
+
+            public StructureSave() { }
+            public StructureSave(SerializationInfo info, StreamingContext context)
+            {
+                List<BlockStruct>? blocks = (List<BlockStruct>?)info.GetValue("Blocks", typeof(List<BlockStruct>));
+                if (blocks != null)
+                    this.Blocks = blocks;
+            }
+
+            public void GetObjectData(SerializationInfo info, StreamingContext context)
+            {
+                info.AddValue("Blocks", Blocks);
+            }
         }
         #endregion
     }

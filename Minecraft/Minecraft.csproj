@@ -10,79 +10,165 @@
 
   <ItemGroup>
     <None Remove="Resources\BlockConfig.json" />
-    <None Remove="Resources\Structures\AcaciaTree\AcaciaTree1.xml" />
-    <None Remove="Resources\Structures\AcaciaTree\AcaciaTree2.xml" />
-    <None Remove="Resources\Structures\AcaciaTree\AcaciaTree3.xml" />
-    <None Remove="Resources\Structures\BirchTree\BirchTree1.xml" />
-    <None Remove="Resources\Structures\BirchTree\BirchTree2.xml" />
-    <None Remove="Resources\Structures\BirchTree\BirchTree3.xml" />
-    <None Remove="Resources\Structures\BirchTree\BirchTree4.xml" />
-    <None Remove="Resources\Structures\Cactus\Cactus1.xml" />
-    <None Remove="Resources\Structures\Cactus\Cactus2.xml" />
-    <None Remove="Resources\Structures\Cactus\Cactus3.xml" />
-    <None Remove="Resources\Structures\Cactus\Cactus4.xml" />
-    <None Remove="Resources\Structures\JungleTree\JungleTree1.xml" />
-    <None Remove="Resources\Structures\JungleTree\JungleTree2.xml" />
-    <None Remove="Resources\Structures\JungleTree\JungleTree3.xml" />
-    <None Remove="Resources\Structures\JungleTree\JungleTree4.xml" />
-    <None Remove="Resources\Structures\JungleTree\JungleTree5.xml" />
-    <None Remove="Resources\Structures\JungleTree\JungleTree6.xml" />
-    <None Remove="Resources\Structures\OakTree\OakTree1.xml" />
-    <None Remove="Resources\Structures\OakTree\OakTree2.xml" />
-    <None Remove="Resources\Structures\OakTree\OakTree3.xml" />
-    <None Remove="Resources\Structures\OakTree\OakTree4.xml" />
-    <None Remove="Resources\Structures\OakTree\OakTree5.xml" />
-    <None Remove="Resources\Structures\Rare\Iglu.xml" />
-    <None Remove="Resources\Structures\Rare\SandCastle.xml" />
-    <None Remove="Resources\Structures\Rare\SandCastleLarge.xml" />
-    <None Remove="Resources\Structures\Rare\SunkenShip.xml" />
-    <None Remove="Resources\Structures\Rare\ViligerHut.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree1.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree2.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree3.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree4.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree5.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree6.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree7.xml" />
-    <None Remove="Resources\Structures\SpruceTree\SpruceTree8.xml" />
+    <None Remove="Resources\Structures\Dat\AcaciaTree\AcaciaTree0.dat" />
+    <None Remove="Resources\Structures\Dat\AcaciaTree\AcaciaTree1.dat" />
+    <None Remove="Resources\Structures\Dat\AcaciaTree\AcaciaTree2.dat" />
+    <None Remove="Resources\Structures\Dat\BirchTree\BirchTree0.dat" />
+    <None Remove="Resources\Structures\Dat\BirchTree\BirchTree1.dat" />
+    <None Remove="Resources\Structures\Dat\BirchTree\BirchTree2.dat" />
+    <None Remove="Resources\Structures\Dat\BirchTree\BirchTree3.dat" />
+    <None Remove="Resources\Structures\Dat\Cactus\Cactus0.dat" />
+    <None Remove="Resources\Structures\Dat\Cactus\Cactus1.dat" />
+    <None Remove="Resources\Structures\Dat\Cactus\Cactus2.dat" />
+    <None Remove="Resources\Structures\Dat\Cactus\Cactus3.dat" />
+    <None Remove="Resources\Structures\Dat\Iglu\Iglu0.dat" />
+    <None Remove="Resources\Structures\Dat\JungleTree\JungleTree0.dat" />
+    <None Remove="Resources\Structures\Dat\JungleTree\JungleTree1.dat" />
+    <None Remove="Resources\Structures\Dat\JungleTree\JungleTree2.dat" />
+    <None Remove="Resources\Structures\Dat\JungleTree\JungleTree3.dat" />
+    <None Remove="Resources\Structures\Dat\JungleTree\JungleTree4.dat" />
+    <None Remove="Resources\Structures\Dat\JungleTree\JungleTree5.dat" />
+    <None Remove="Resources\Structures\Dat\OakTree\OakTree0.dat" />
+    <None Remove="Resources\Structures\Dat\OakTree\OakTree1.dat" />
+    <None Remove="Resources\Structures\Dat\OakTree\OakTree2.dat" />
+    <None Remove="Resources\Structures\Dat\OakTree\OakTree3.dat" />
+    <None Remove="Resources\Structures\Dat\OakTree\OakTree4.dat" />
+    <None Remove="Resources\Structures\Dat\SandCastle\SandCastle0.dat" />
+    <None Remove="Resources\Structures\Dat\SandCastle\SandCastle1.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree0.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree1.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree2.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree3.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree4.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree5.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree6.dat" />
+    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree7.dat" />
+    <None Remove="Resources\Structures\Dat\SunkenShip\SunkenShip0.dat" />
+    <None Remove="Resources\Structures\Dat\ViligerHut\ViligerHut0.dat" />
+    <None Remove="Resources\Structures\XML\AcaciaTree\AcaciaTree1.xml" />
+    <None Remove="Resources\Structures\XML\AcaciaTree\AcaciaTree2.xml" />
+    <None Remove="Resources\Structures\XML\AcaciaTree\AcaciaTree3.xml" />
+    <None Remove="Resources\Structures\XML\BirchTree\BirchTree1.xml" />
+    <None Remove="Resources\Structures\XML\BirchTree\BirchTree2.xml" />
+    <None Remove="Resources\Structures\XML\BirchTree\BirchTree3.xml" />
+    <None Remove="Resources\Structures\XML\BirchTree\BirchTree4.xml" />
+    <None Remove="Resources\Structures\XML\Cactus\Cactus1.xml" />
+    <None Remove="Resources\Structures\XML\Cactus\Cactus2.xml" />
+    <None Remove="Resources\Structures\XML\Cactus\Cactus3.xml" />
+    <None Remove="Resources\Structures\XML\Cactus\Cactus4.xml" />
+    <None Remove="Resources\Structures\XML\JungleTree\JungleTree1.xml" />
+    <None Remove="Resources\Structures\XML\JungleTree\JungleTree2.xml" />
+    <None Remove="Resources\Structures\XML\JungleTree\JungleTree3.xml" />
+    <None Remove="Resources\Structures\XML\JungleTree\JungleTree4.xml" />
+    <None Remove="Resources\Structures\XML\JungleTree\JungleTree5.xml" />
+    <None Remove="Resources\Structures\XML\JungleTree\JungleTree6.xml" />
+    <None Remove="Resources\Structures\XML\OakTree\OakTree1.xml" />
+    <None Remove="Resources\Structures\XML\OakTree\OakTree2.xml" />
+    <None Remove="Resources\Structures\XML\OakTree\OakTree3.xml" />
+    <None Remove="Resources\Structures\XML\OakTree\OakTree4.xml" />
+    <None Remove="Resources\Structures\XML\OakTree\OakTree5.xml" />
+    <None Remove="Resources\Structures\XML\Rare\Iglu.xml" />
+    <None Remove="Resources\Structures\XML\Rare\SandCastle1.xml" />
+    <None Remove="Resources\Structures\XML\Rare\SandCastle2.xml" />
+    <None Remove="Resources\Structures\XML\Rare\SunkenShip.xml" />
+    <None Remove="Resources\Structures\XML\Rare\ViligerHut.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree1.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree2.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree3.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree4.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree5.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree6.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree7.xml" />
+    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree8.xml" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Structures\AcaciaTree\AcaciaTree1.xml" />
-    <EmbeddedResource Include="Resources\Structures\AcaciaTree\AcaciaTree2.xml" />
-    <EmbeddedResource Include="Resources\Structures\AcaciaTree\AcaciaTree3.xml" />
-    <EmbeddedResource Include="Resources\Structures\BirchTree\BirchTree1.xml" />
-    <EmbeddedResource Include="Resources\Structures\BirchTree\BirchTree2.xml" />
-    <EmbeddedResource Include="Resources\Structures\BirchTree\BirchTree3.xml" />
-    <EmbeddedResource Include="Resources\Structures\BirchTree\BirchTree4.xml" />
-    <EmbeddedResource Include="Resources\Structures\Cactus\Cactus1.xml" />
-    <EmbeddedResource Include="Resources\Structures\Cactus\Cactus2.xml" />
-    <EmbeddedResource Include="Resources\Structures\Cactus\Cactus3.xml" />
-    <EmbeddedResource Include="Resources\Structures\Cactus\Cactus4.xml" />
-    <EmbeddedResource Include="Resources\Structures\JungleTree\JungleTree1.xml" />
-    <EmbeddedResource Include="Resources\Structures\JungleTree\JungleTree2.xml" />
-    <EmbeddedResource Include="Resources\Structures\JungleTree\JungleTree3.xml" />
-    <EmbeddedResource Include="Resources\Structures\JungleTree\JungleTree4.xml" />
-    <EmbeddedResource Include="Resources\Structures\JungleTree\JungleTree5.xml" />
-    <EmbeddedResource Include="Resources\Structures\JungleTree\JungleTree6.xml" />
-    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree1.xml" />
-    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree2.xml" />
-    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree3.xml" />
-    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree4.xml" />
-    <EmbeddedResource Include="Resources\Structures\OakTree\OakTree5.xml" />
-    <EmbeddedResource Include="Resources\Structures\Rare\Iglu.xml" />
-    <EmbeddedResource Include="Resources\Structures\Rare\SandCastle.xml" />
-    <EmbeddedResource Include="Resources\Structures\Rare\SandCastleLarge.xml" />
-    <EmbeddedResource Include="Resources\Structures\Rare\SunkenShip.xml" />
-    <EmbeddedResource Include="Resources\Structures\Rare\ViligerHut.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree1.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree2.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree3.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree4.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree5.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree6.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree7.xml" />
-    <EmbeddedResource Include="Resources\Structures\SpruceTree\SpruceTree8.xml" />
+    <EmbeddedResource Include="Resources\Structures\Dat\AcaciaTree\AcaciaTree0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\AcaciaTree\AcaciaTree1.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\AcaciaTree\AcaciaTree2.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\BirchTree\BirchTree0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\BirchTree\BirchTree1.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\BirchTree\BirchTree2.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\BirchTree\BirchTree3.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\Cactus\Cactus0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\Cactus\Cactus1.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\Cactus\Cactus2.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\Cactus\Cactus3.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\Iglu\Iglu0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\JungleTree\JungleTree0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\JungleTree\JungleTree1.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\JungleTree\JungleTree2.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\JungleTree\JungleTree3.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\JungleTree\JungleTree4.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\JungleTree\JungleTree5.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\OakTree\OakTree0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\OakTree\OakTree1.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\OakTree\OakTree2.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\OakTree\OakTree3.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\OakTree\OakTree4.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\SandCastle\SandCastle0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\SandCastle\SandCastle1.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree0.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree1.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree2.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree3.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree4.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree5.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree6.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree7.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SunkenShip\SunkenShip0.dat" />
+    <EmbeddedResource Include="Resources\Structures\Dat\ViligerHut\ViligerHut0.dat" />
+    <EmbeddedResource Include="Resources\Structures\XML\AcaciaTree\AcaciaTree1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\AcaciaTree\AcaciaTree2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\AcaciaTree\AcaciaTree3.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\BirchTree\BirchTree1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\BirchTree\BirchTree2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\BirchTree\BirchTree3.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\BirchTree\BirchTree4.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Cactus\Cactus1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Cactus\Cactus2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Cactus\Cactus3.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Cactus\Cactus4.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\JungleTree\JungleTree1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\JungleTree\JungleTree2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\JungleTree\JungleTree3.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\JungleTree\JungleTree4.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\JungleTree\JungleTree5.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\JungleTree\JungleTree6.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\OakTree\OakTree1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\OakTree\OakTree2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\OakTree\OakTree3.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\OakTree\OakTree4.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\OakTree\OakTree5.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Rare\Iglu.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SandCastle\SandCastle1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SandCastle\SandCastle2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Rare\SunkenShip.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\Rare\ViligerHut.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree1.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree2.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree3.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree4.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree5.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree6.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree7.xml" />
+    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree8.xml" />
     <EmbeddedResource Include="WorldBuilding\Block\BlockConfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

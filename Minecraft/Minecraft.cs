@@ -37,7 +37,7 @@ namespace Minecraft
 
         protected override Camera OnCreateCamera()
         {
-            return new Camera(new Vector3(0, 150, 0), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 10f };
+            return new Camera(new Vector3(21130, 150, -23230), this.Size.X / this.Size.Y) { MaxViewDistance = 1500.0f, Speed = 10f };
         }
 
         protected override void OnLoadShaders()
