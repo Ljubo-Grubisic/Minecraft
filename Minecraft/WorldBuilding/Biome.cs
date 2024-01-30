@@ -148,7 +148,7 @@ namespace Minecraft.WorldBuilding
                 return biomeConfig.PrimaryVegetationStructure;
             }
 
-            int rotationIndex = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(position.X, position.Y), -1, 2);
+            int rotationIndex = WorldGenerator.Random1.ConvertMapedValueToIntScale(WorldGenerator.Random1.GetMapedNoiseValue(position.X, position.Y), -1, 2);
 
             if (rotationIndex == -1)
                 rotationIndex = 0;

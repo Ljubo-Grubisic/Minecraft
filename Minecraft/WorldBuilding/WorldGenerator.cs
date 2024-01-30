@@ -8,7 +8,8 @@ namespace Minecraft.WorldBuilding
         internal static int Seed { get; private set; } = 0;
         internal static int WaterLevel { get; private set; } = 50;
 
-        internal static NoiseMap Random { get; private set; }
+        internal static NoiseMap Random1 { get; private set; }
+        internal static NoiseMap Random2 { get; private set; }
 
         private static NoiseMap Continentalness { get; set; }
         private static NoiseMap Vegetation { get; set; }
@@ -18,8 +19,8 @@ namespace Minecraft.WorldBuilding
 
         static WorldGenerator()
         {
-            Random = new NoiseMap(WorldGenerator.Seed, 2f, FastNoiseLite.NoiseType.OpenSimplex2);
-
+            Random1 = new NoiseMap(WorldGenerator.Seed, 2f, FastNoiseLite.NoiseType.OpenSimplex2);
+            Random2 = new NoiseMap(WorldGenerator.Seed, 3.5f, FastNoiseLite.NoiseType.OpenSimplex2);
             {
                 (double, double) A = (0.0646594264678, 0.0421697707709);
                 (double, double) B = (0.2529110529704, 0.0672673482315);

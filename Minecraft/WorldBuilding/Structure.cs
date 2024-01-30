@@ -48,7 +48,7 @@ namespace Minecraft.WorldBuilding
             int yChunk = chunkColumnPosition.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
 
             int numStructures = vegetation.ConvertMapedValueToIntScale(vegetation.GetMapedNoiseValue(xChunk, yChunk), 0, 4);
-            float[,] randomData = WorldGenerator.Random.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+            float[,] randomData = WorldGenerator.Random1.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
 
             List<(Vector2i Position, float Value)> vegetationData = new List<(Vector2i, float)>();
             for (int i = 0; i < ChunkColumn.ChunkSize; i++)
@@ -136,14 +136,14 @@ namespace Minecraft.WorldBuilding
 
         internal static void AddRareStructure(ref Dictionary<Vector3i, BlockType> blocks, Vector2i chunkColumnPosition, int[,] height, BiomeType[,] biome, int waterLevel, int chanceOutOf100)
         {
-            int randomNumber = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(chunkColumnPosition.X, chunkColumnPosition.Y), -1, 101);
+            int randomNumber = WorldGenerator.Random1.ConvertMapedValueToIntScale(WorldGenerator.Random1.GetMapedNoiseValue(chunkColumnPosition.X, chunkColumnPosition.Y), -1, 101);
 
             if (randomNumber < chanceOutOf100)
             {
                 int xChunk = chunkColumnPosition.X * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
                 int yChunk = chunkColumnPosition.Y * ChunkColumn.ChunkSize - (ChunkColumn.ChunkSize / 2);
 
-                float[,] randomData = WorldGenerator.Random.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
+                float[,] randomData = WorldGenerator.Random1.GetMapedNoiseData(xChunk, yChunk, ChunkColumn.ChunkSize);
 
                 List<(Vector2i Position, float Value)> structureData = new List<(Vector2i, float)>();
                 for (int i = 0; i < ChunkColumn.ChunkSize; i++)
@@ -352,7 +352,7 @@ namespace Minecraft.WorldBuilding
             if (numLists == -1)
                 throw new Exception("Invalid structure type, this structure type has no block lists or isnt loaded");
 
-            int index = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), -1, numLists);
+            int index = WorldGenerator.Random1.ConvertMapedValueToIntScale(WorldGenerator.Random1.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), -1, numLists);
             if (index == numLists)
                 index = numLists - 1;
             if (index == -1)
@@ -363,7 +363,7 @@ namespace Minecraft.WorldBuilding
 
         private static List<BlockStruct> RotateBlocksAlgorithm(List<BlockStruct> blocks, Vector3i structurePosition)
         {
-            int rotationIndex = WorldGenerator.Random.ConvertMapedValueToIntScale(WorldGenerator.Random.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), -1, 5);
+            int rotationIndex = WorldGenerator.Random2.ConvertMapedValueToIntScale(WorldGenerator.Random2.GetMapedNoiseValue(structurePosition.X, structurePosition.Y), -1, 5);
 
             if (rotationIndex == 5)
                 rotationIndex = 4;
