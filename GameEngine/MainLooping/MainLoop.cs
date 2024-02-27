@@ -47,6 +47,7 @@ namespace GameEngine.MainLooping
             if (KeyboardManager.IsKeyDown(Keys.Escape) && this.WindowState == WindowState.Fullscreen)
             {
                 this.WindowState = WindowState.Normal;
+                this.Size -= this.Size / 5;
             }
             if (KeyboardManager.IsKeyDown(Keys.LeftAlt) && KeyboardManager.IsKeyDown(Keys.F4))
             {
