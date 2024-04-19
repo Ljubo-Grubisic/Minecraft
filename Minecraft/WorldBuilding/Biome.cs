@@ -1,4 +1,5 @@
 ﻿using Minecraft.System;
+using OpenTK.Graphics.ES11;
 using OpenTK.Mathematics;
 
 namespace Minecraft.WorldBuilding
@@ -91,7 +92,7 @@ namespace Minecraft.WorldBuilding
                 {
                     BiomeConfig biomeConfig = GetBiome(height[x, z], temperature[x, z], humidity[x, z]);
                     biome[x, z] = biomeConfig.Type;
-
+            
                     for (int y = 0; y <= height[x, z]; y++)
                     {
                         if (y == height[x, z])
@@ -381,7 +382,7 @@ namespace Minecraft.WorldBuilding
                 TemperatureRange = new Vector2(0, 45),
                 HumidityRange = new Vector2(0, 100),
 
-                PrimaryVegetationStructure = StructureType.SpruceTree,
+                PrimaryVegetationStructure = StructureType.SnowSpruceTree,
                 SecondaryVegetationStructure = StructureType.None,
                 RareStructure = StructureType.Iglu,
 

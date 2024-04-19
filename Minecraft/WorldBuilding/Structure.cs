@@ -14,6 +14,7 @@ namespace Minecraft.WorldBuilding
         OakTree,
         BirchTree,
         SpruceTree,
+        SnowSpruceTree,
         JungleTree,
         AcaciaTree,
         Cactus,
@@ -812,8 +813,9 @@ namespace Minecraft.WorldBuilding
             LoadStructureSavesBinary(StructureType.Cactus, "Cactus", 4);
             LoadStructureSavesBinary(StructureType.JungleTree, "JungleTree", 6);
             LoadStructureSavesBinary(StructureType.OakTree, "OakTree", 5);
-            LoadStructureSavesBinary(StructureType.SpruceTree, "SpruceTree", 8);
-                              
+            LoadStructureSavesBinary(StructureType.SpruceTree, "SpruceTree", 4);
+            LoadStructureSavesBinary(StructureType.SnowSpruceTree, "SnowSpruceTree", 4);
+
             LoadStructureSavesBinary(StructureType.SandCastle, "SandCastle", 1);
             LoadStructureSavesBinary(StructureType.Iglu, "Iglu", 1);
             LoadStructureSavesBinary(StructureType.SunkenShip, "SunkenShip", 1);

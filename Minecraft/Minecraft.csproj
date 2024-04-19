@@ -39,9 +39,7 @@
     <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree1.dat" />
     <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree2.dat" />
     <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree3.dat" />
-    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree4.dat" />
     <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree5.dat" />
-    <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree6.dat" />
     <None Remove="Resources\Structures\Dat\SpruceTree\SpruceTree7.dat" />
     <None Remove="Resources\Structures\Dat\SunkenShip\SunkenShip0.dat" />
     <None Remove="Resources\Structures\Dat\ViligerHut\ViligerHut0.dat" />
@@ -72,13 +70,9 @@
     <None Remove="Resources\Structures\XML\Rare\SandCastle2.xml" />
     <None Remove="Resources\Structures\XML\Rare\SunkenShip.xml" />
     <None Remove="Resources\Structures\XML\Rare\ViligerHut.xml" />
-    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree1.xml" />
     <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree2.xml" />
-    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree3.xml" />
     <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree4.xml" />
-    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree5.xml" />
     <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree6.xml" />
-    <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree7.xml" />
     <None Remove="Resources\Structures\XML\SpruceTree\SpruceTree8.xml" />
   </ItemGroup>
 
@@ -111,25 +105,25 @@
     <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree0.dat">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SnowSpruceTree\SnowSpruceTree0.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree1.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SnowSpruceTree\SnowSpruceTree1.dat">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree2.dat">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Structures\Dat\SnowSpruceTree\SnowSpruceTree2.dat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree3.dat">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree4.dat">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree5.dat">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree6.dat">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Structures\Dat\SpruceTree\SpruceTree7.dat">
+    <EmbeddedResource Include="Resources\Structures\Dat\SnowSpruceTree\SnowSpruceTree3.dat">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Structures\Dat\SunkenShip\SunkenShip0.dat" />
@@ -161,14 +155,6 @@
     <EmbeddedResource Include="Resources\Structures\XML\SandCastle\SandCastle2.xml" />
     <EmbeddedResource Include="Resources\Structures\XML\Rare\SunkenShip.xml" />
     <EmbeddedResource Include="Resources\Structures\XML\Rare\ViligerHut.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree1.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree2.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree3.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree4.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree5.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree6.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree7.xml" />
-    <EmbeddedResource Include="Resources\Structures\XML\SpruceTree\SpruceTree8.xml" />
     <EmbeddedResource Include="WorldBuilding\Block\BlockConfig.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

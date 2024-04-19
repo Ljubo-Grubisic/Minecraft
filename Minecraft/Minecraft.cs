@@ -84,13 +84,13 @@ namespace Minecraft
             Shader.Use();
             Shader.SetMatrix("view", view);
             Shader.SetMatrix("projection", projection);
-
+            
             // Directional light
             Shader.SetVec3("dirLight.ambient", 0.55f, 0.55f, 0.55f);
             Shader.SetVec3("dirLight.diffuse", 0.65f, 0.65f, 0.65f);
-
+            
             Shader.SetVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-
+            
             lock (ChunkManager.ChunksLoaded)
             {
                 foreach (ChunkColumn chunk in ChunkManager.ChunksLoaded.Values.ToList())
@@ -98,13 +98,13 @@ namespace Minecraft
                     if (chunk.Mesh != null)
                     {
                         GL.BindVertexArray(chunk.Mesh.VAO);
-
+            
                         Shader.SetMatrix("model", Matrix4.CreateTranslation(new Vector3(chunk.Position.X * ChunkColumn.ChunkSize, (ChunkColumn.Height / 2), chunk.Position.Y * ChunkColumn.ChunkSize)));
-
+            
                         GL.BindTexture(TextureTarget.Texture2D, Block.Texture.Handle);
-
+            
                         GL.DrawArrays(PrimitiveType.Triangles, 0, chunk.Mesh.Vertices.Count);
-
+            
                         GL.BindVertexArray(0);
                     }
                 }
